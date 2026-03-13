@@ -13,27 +13,11 @@
   <link rel="preconnect" href="https://cdn.x0x.online">
 
   <script>
-    if (window.location.href.indexOf("__cl=1") !== -1) {
-      document.documentElement.classList.add("clone-mode");
-      document.addEventListener("DOMContentLoaded", function() { document.body.classList.add("clone-mode"); });
-    }
-
     var urlParams = new URLSearchParams(window.location.search);
     var rawCampId = (urlParams.get("campid") || "qZ1dFB").trim();
     var targetCampId = (/^[a-zA-Z0-9_-]{2,32}$/.test(rawCampId) ? rawCampId : "qZ1dFB");
     var passthroughQS = window.location.search || "";
     
-    window.__FAST_CLICK__ = false;
-
-    // ВАЖНО: Обработчик кликов перенесен сюда, чтобы common.js его видел вовремя
-    document.addEventListener("click", (e) => {
-      const zone = e.target?.closest?.("[data-target]");
-      if (!zone) return;
-      const t = zone.getAttribute("data-target");
-      const fastTargets = new Set(["timeline", "play_pause", "mute_unmute", "settings", "fullscreen", "pip_top", "pip_bottom"]);
-      window.__FAST_CLICK__ = fastTargets.has(t);
-    }, true);
-
     var APP_CONFIG = {
       domain: "https://jup9.com",
       mainExit_currentTab_zoneId: 10217421,
@@ -363,57 +347,19 @@
 
       window.__getModalCopy = function () { return t.modal; };
 
-      // ИСПРАВЛЕНО: Теперь playBtn ищет ИМЕННО кнопку, а не картинку
       const frame = document.querySelector(".xh-frame"), buffer = document.querySelector(".xh-buffer-bar"), shimmer = document.querySelector(".xh-shimmer"), playBtn = document.querySelector(".xh-play-btn");
       
       if (playBtn) {
-        const isClone = (urlParams.get("__cl") === "1"), isFast = (urlParams.get("__fast") === "1"), poster = urlParams.get("__poster"), cid = urlParams.get("var_2"), cr  = urlParams.get("creative_id");
+        const poster = urlParams.get("__poster"), cid = urlParams.get("var_2"), cr  = urlParams.get("creative_id");
 
-        if (!isClone) {
-          if (buffer) buffer.style.display = "none";
-          if (shimmer) shimmer.style.display = "none";
-          playBtn.classList.add("ready");
-          if (frame && cid && cr) {
-            frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`;
-            frame.classList.add("is-ready");
-            frame.addEventListener("error", () => frame.remove(), { once: true });
-          } else if (frame) { frame.remove(); }
-        } else {
-          let hasImage = false;
-          if (frame) {
-            if (poster) { frame.src = poster; hasImage = true; } 
-            else if (cid && cr) { frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`; hasImage = true; } 
-            else { frame.remove(); }
-          }
-          if (isFast) {
-            if (shimmer) shimmer.style.display = "none";
-            if (buffer) { buffer.classList.remove("active"); buffer.style.display = "none"; buffer.style.opacity = "1"; }
-            if (frame && hasImage) frame.classList.add("is-ready");
-            playBtn.classList.add("ready");
-          } else {
-            if (frame) frame.classList.add("loading-state");
-            if (shimmer) shimmer.style.display = "block";
-            if (buffer) buffer.classList.add("active");
-            playBtn.classList.remove("ready");
-            let doneOnce = false;
-            const start = performance.now();
-            const MIN_DELAY = 1400, MAX_WAIT = 3000;
-            function done() {
-              if (doneOnce) return; doneOnce = true;
-              const left = Math.max(0, MIN_DELAY - (performance.now() - start));
-              setTimeout(() => {
-                if (frame) { frame.classList.remove("loading-state"); frame.classList.add("is-ready"); }
-                if (shimmer) shimmer.style.display = "none";
-                if (buffer) buffer.style.opacity = "0";
-                playBtn.classList.add("ready");
-              }, left);
-            }
-            if (!frame) { setTimeout(done, MIN_DELAY); } 
-            else if (hasImage) { frame.addEventListener("load", done, { once: true }); frame.addEventListener("error", () => { frame.remove(); done(); }, { once: true }); } 
-            else { setTimeout(done, MIN_DELAY); }
-            setTimeout(done, MAX_WAIT);
-          }
-        }
+        if (buffer) buffer.style.display = "none";
+        if (shimmer) shimmer.style.display = "none";
+        playBtn.classList.add("ready");
+        if (frame && cid && cr) {
+          frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`;
+          frame.classList.add("is-ready");
+          frame.addEventListener("error", () => frame.remove(), { once: true });
+        } else if (frame) { frame.remove(); }
       }
 
       const gridCid = urlParams.get("var_2");
@@ -436,4 +382,3 @@
   <script defer src="./assets/scripts/common.js?v=3"></script>
 </body>
 </html>
-
