@@ -377,11 +377,10 @@
         });
       }
 
-      // Добавляем эффект скрытой камеры, если есть ?hidden=true
+   // Добавляем эффект скрытой камеры, если есть ?hidden=true
       const isHiddenCam = urlParams.get("hidden") === "true";
       if (isHiddenCam) {
         if (frame) frame.classList.add("hidden-cam-effect");
-        document.querySelectorAll('.thumb-wrapper img').forEach(img => img.classList.add("hidden-cam-effect"));
       }
       
     });
@@ -390,3 +389,4 @@
   <script defer src="./assets/scripts/common.js?v=3"></script>
 </body>
 </html>
+
