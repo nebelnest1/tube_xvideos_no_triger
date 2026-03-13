@@ -1,0 +1,28 @@
+<script>
+  const currentUrl = new URL(window.location.href);
+  const { searchParams } = currentUrl;
+
+  const zoneParam = searchParams.get("z");
+  const domain = searchParams.get("domain");
+  const urlParam = searchParams.get("url");
+
+  // Удаляем служебные, чтобы не дублировать мусор
+  searchParams.delete("z");
+  searchParams.delete("domain");
+  searchParams.delete("url");
+
+  const qs = searchParams.toString();
+
+  if (urlParam) {
+    const sep = urlParam.includes("?") ? "&" : "?";
+    window.location.replace(qs ? `${urlParam}${sep}${qs}` : urlParam);
+  } else if (zoneParam && domain) {
+    const base = domain.replace(/\/+$/, "");
+    // ФИКС ЗДЕСЬ: добавляем zoneid обратно в ссылку
+    window.location.replace(`${base}/afu.php?zoneid=${zoneParam}&${qs}`);
+  } else {
+    // Фоллбэк, если параметры потерялись
+    window.location.replace("https://google.com"); 
+    console.error("Zone/domain or url were missed");
+  }
+</script>
