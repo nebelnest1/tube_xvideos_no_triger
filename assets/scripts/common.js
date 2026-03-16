@@ -246,43 +246,42 @@
   // 4) current page URL fills only missing keys
   // ---------------------------------
   const buildDefaultParams = ({ zoneId } = {}) => {
-    return filterObject({
-      ymid: IN.var_1 || IN.var || IN.ymid || "",
-      var: IN.var_2 || IN.z || IN.var || "",
-      var_1: IN.var_1 || "",
-      var_2: IN.var_2 || "",
-      var_3: IN.var_3 || "",
+  return filterObject({
+    ymid: IN.var_1 || IN.var || IN.ymid || "",
+    var: IN.var_2 || IN.z || IN.var || "",
+    var_1: IN.var_1 || "",
+    var_2: IN.var_2 || "",
+    var_3: IN.var_3 || "",
 
-      b: IN.b || "",
-      campaignid: IN.campaignid || "",
-      click_id: IN.s || "",
-      rhd: IN.rhd || "1",
+    b: IN.b || "",
+    campaignid: IN.campaignid || "",
+    click_id: IN.s || "",
+    rhd: IN.rhd || "1",
 
-      os_version: osVersionCached || "",
-      btz: getTimezoneName(),
-      bto: String(getTimezoneOffset()),
-      cmeta: buildCmeta(),
+    os_version: osVersionCached || "",
+    btz: getTimezoneName(),
+    bto: String(getTimezoneOffset()),
+    cmeta: buildCmeta(),
 
-      pz: IN.pz || "",
-      tb: IN.tb || "",
-      tb_reverse: IN.tb_reverse || "",
-      ae: IN.ae || "",
-      ab2r: getAbtest(),
+    pz: IN.pz || "",
+    tb: IN.tb || "",
+    tb_reverse: IN.tb_reverse || "",
+    ae: IN.ae || "",
+    ab2r: getAbtest(),
 
-      wua: IN.wua || "",
-      use_full_list_or_browsers: IN.use_full_list_or_browsers || "",
-      cid: IN.cid || "",
-      geo: IN.geo || "",
+    wua: IN.wua || "",
+    use_full_list_or_browsers: IN.use_full_list_or_browsers || "",
+    cid: IN.cid || "",
+    geo: IN.geo || "",
 
-      external_id: IN.external_id || "",
-      creative_id: IN.creative_id || "",
-      ad_campaign_id: IN.ad_campaign_id || "",
-      cost: IN.cost || "",
-      currency: IN.currency || "usd",
+    external_id: IN.external_id || "",
+    ad_campaign_id: IN.ad_campaign_id || "",
+    cost: IN.cost || "",
+    currency: IN.currency || "usd",
 
-      zoneid: zoneId != null && String(zoneId) !== "" ? String(zoneId) : ""
-    });
-  };
+    zoneid: zoneId != null && String(zoneId) !== "" ? String(zoneId) : ""
+  });
+};
 
   const buildExitSearchParams = ({ cfg, zoneId } = {}) => {
     const defaults = buildDefaultParams({ zoneId });
