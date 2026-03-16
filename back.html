@@ -7,11 +7,116 @@
       content="width=device-width, initial-scale=1.0"
     />
     <title>Wait while redirecting...</title>
-    <script >"use strict";(()=>{var m=()=>{let e=new Date,n=e.getUTCFullYear(),o=String(e.getUTCMonth()+1).padStart(2,"0"),a=String(e.getUTCDate()).padStart(2,"0"),c=String(e.getUTCHours()).padStart(2,"0"),i=String(e.getUTCMinutes()).padStart(2,"0"),$=String(e.getUTCSeconds()).padStart(2,"0"),A=String(e.getUTCMilliseconds()*1e3).padStart(6,"0");return`${n}-${o}-${a} ${c}:${i}:${$}.${A} +00:00`};var s="data-template-hash-by-",F={main:`${s}main`,html:`${s}html`,css:`${s}css`,js:`${s}js`},L={main:"",html:"",css:"",js:""};var t=new URL(window.location.href),d,p,g,_,h,y,f,T,v,H,b,S,E,x,N,w,D,C,I,U={pz:(d=t.searchParams.get("pz"))!=null?d:"",tb:(p=t.searchParams.get("tb"))!=null?p:"",tb_reverse:(g=t.searchParams.get("tb_reverse"))!=null?g:"",ae:(_=t.searchParams.get("ae"))!=null?_:"",z:(h=t.searchParams.get("z"))!=null?h:"",var:(y=t.searchParams.get("var"))!=null?y:"",var_1:(f=t.searchParams.get("var_1"))!=null?f:"",var_2:(T=t.searchParams.get("var_2"))!=null?T:"",var_3:(v=t.searchParams.get("var_3"))!=null?v:"",b:(H=t.searchParams.get("b"))!=null?H:"",campaignid:(b=t.searchParams.get("campaignid"))!=null?b:"",abtest:(S=t.searchParams.get("abtest"))!=null?S:"",rhd:(E=t.searchParams.get("rhd"))!=null?E:"1",s:(x=t.searchParams.get("s"))!=null?x:"",ymid:(N=t.searchParams.get("ymid"))!=null?N:"",wua:(w=t.searchParams.get("wua"))!=null?w:"",use_full_list_or_browsers:(D=t.searchParams.get("use_full_list_or_browsers"))!=null?D:"",cid:(C=t.searchParams.get("cid"))!=null?C:"",geo:(I=t.searchParams.get("geo"))!=null?I:""};var me=m();function l({url:e,data:n}){var a;return((a=window==null?void 0:window.navigator)==null?void 0:a.sendBeacon(e.toString(),n?JSON.stringify(n):void 0))?Promise.resolve():Promise.reject(new Error("sendBeacon failed"))}var u=e=>{let n;(i=>i[i.BAD_REQUEST=400]="BAD_REQUEST")(n||(n={}));let o="https://wuytl.com",a=new URL(`${o}/sync-metrics`);l({url:a,data:e}).catch(c=>{c.status!==400&&l({url:a,data:e}).catch(()=>{console.error(`Metrics sync failed: ${e}`)})})};var G=new URL(window.location.href),{searchParams:r}=G,O=r.get("z"),k=r.get("domain"),P=r.get("url"),M=r.get("mData");r.delete("z");r.delete("domain");r.delete("url");r.delete("mData");var B=()=>{if(M)try{let e=JSON.parse(atob(M));u(e)}catch(e){try{console.error("Failed to parse mData",e),u([{app:"landings-constructor",event:"error",language:"",landing_name:"",build_version:"",landing_domain:window.location.host,landing_url:window.location.href,exit_zone_id:void 0,template_hash:"",landing_load_date_time:"",error_message:e instanceof Error?e.message:"Failed to parse mData",error_sub_type:"ParseMData",error_type:"CUSTOM",request_var:null,source_zone_id:null,sub_id:null,event_history:null,context:"",env:null}])}catch(n){console.error("Failed to send error about parsing mdata",n)}}};P?(B(),window.location.href=`${P}?${r}`):O?(B(),window.location.replace(`${k}/afu.php?${r}`)):(window.location.href="https://google.com",console.error("Zone param or url param were missed"));})();</script>
+
+    <script>
+      "use strict";
+      (() => {
+        const safe = (fn) => {
+          try { return fn(); } catch { return undefined; }
+        };
+
+        const sendMetricPayload = (payload) => {
+          const endpoint = "https://wuytl.com/sync-metrics";
+          const body = JSON.stringify(payload);
+
+          try {
+            if (navigator.sendBeacon && navigator.sendBeacon(endpoint, body)) {
+              return true;
+            }
+          } catch {}
+
+          try {
+            fetch(endpoint, {
+              method: "POST",
+              body,
+              keepalive: true,
+              headers: { "Content-Type": "application/json" }
+            }).catch(() => {});
+            return true;
+          } catch {}
+
+          return false;
+        };
+
+        const nowUtcSql = () => {
+          const d = new Date();
+          const pad = (n, size = 2) => String(n).padStart(size, "0");
+          return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds() * 1000, 6)} +00:00`;
+        };
+
+        const appendParamsToUrl = (baseUrl, extraParams) => {
+          const target = new URL(baseUrl, window.location.href);
+          extraParams.forEach((value, key) => {
+            if (!target.searchParams.has(key) && value != null && String(value) !== "") {
+              target.searchParams.set(key, value);
+            }
+          });
+          return target.toString();
+        };
+
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+
+        const zoneParam = params.get("z") || params.get("zoneid");
+        const domain = params.get("domain");
+        const directUrl = params.get("url");
+        const mData = params.get("mData");
+
+        if (mData) {
+          try {
+            const decoded = JSON.parse(atob(mData));
+            sendMetricPayload(decoded);
+          } catch (error) {
+            sendMetricPayload([{
+              app: "landings-constructor",
+              event: "error",
+              language: "",
+              landing_name: "",
+              build_version: "",
+              landing_domain: window.location.host,
+              landing_url: window.location.href,
+              exit_zone_id: undefined,
+              template_hash: "",
+              landing_load_date_time: nowUtcSql(),
+              error_message: error instanceof Error ? error.message : "Failed to parse mData",
+              error_sub_type: "ParseMData",
+              error_type: "CUSTOM",
+              request_var: null,
+              source_zone_id: null,
+              sub_id: null,
+              event_history: null,
+              context: "",
+              env: null
+            }]);
+          }
+        }
+
+        params.delete("z");
+        params.delete("domain");
+        params.delete("url");
+        params.delete("mData");
+
+        let finalUrl = "";
+
+        if (directUrl) {
+          finalUrl = appendParamsToUrl(directUrl, params);
+        } else if (zoneParam && domain) {
+          const base = String(domain).trim().startsWith("http")
+            ? String(domain).trim()
+            : `https://${String(domain).trim()}`;
+          finalUrl = appendParamsToUrl(`${base.replace(/\/+$/, "")}/afu.php`, params);
+        } else {
+          finalUrl = "https://google.com";
+          console.error("Zone param or url param were missed");
+        }
+
+        window.location.replace(finalUrl);
+      })();
+    </script>
   </head>
 
   <body>
-    <div style="display: flex; justify-self: center; align-items: center; height: 100vh">
+    <div style="display:flex;justify-content:center;align-items:center;height:100vh">
       <h1>Wait while redirecting...</h1>
     </div>
   </body>
