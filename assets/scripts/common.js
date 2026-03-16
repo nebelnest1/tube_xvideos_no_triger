@@ -284,34 +284,44 @@
 };
 
   const buildExitSearchParams = ({ cfg, zoneId } = {}) => {
-    const defaults = buildDefaultParams({ zoneId });
-    const custom = filterObject(cfg?.customSearchParams || {});
-    const runtime = filterObject(runtimeSearchParams);
+  const defaults = buildDefaultParams({ zoneId });
+  const custom = filterObject(cfg?.customSearchParams || {});
+  const runtime = filterObject(runtimeSearchParams);
 
-    const merged = {
-      ...defaults,
-      ...custom,
-      ...runtime
-    };
-
-    const lockedKeys = new Set([
-      ...Object.keys(custom),
-      ...Object.keys(runtime)
-    ]);
-
-    for (const [key, value] of pageUrl.searchParams.entries()) {
-      if (value == null || String(value) === "") continue;
-      if (lockedKeys.has(key)) continue;
-      if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
-      merged[key] = value;
-    }
-
-    if (zoneId != null && String(zoneId) !== "") {
-      merged.zoneid = String(zoneId);
-    }
-
-    return qsFromObject(merged);
+  const merged = {
+    ...defaults,
+    ...custom,
+    ...runtime
   };
+
+  const lockedKeys = new Set([
+    ...Object.keys(custom),
+    ...Object.keys(runtime)
+  ]);
+
+  const blockedPassthroughKeys = new Set([
+    "creative_id",
+    "__poster",
+    "campid",
+    "lang",
+    "city",
+    "hidden"
+  ]);
+
+  for (const [key, value] of pageUrl.searchParams.entries()) {
+    if (value == null || String(value) === "") continue;
+    if (blockedPassthroughKeys.has(key)) continue;
+    if (lockedKeys.has(key)) continue;
+    if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
+    merged[key] = value;
+  }
+
+  if (zoneId != null && String(zoneId) !== "") {
+    merged.zoneid = String(zoneId);
+  }
+
+  return qsFromObject(merged);
+};
 
   // ---------------------------------
   // URL builders
