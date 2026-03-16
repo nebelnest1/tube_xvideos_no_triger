@@ -1,4 +1,4 @@
-/* common.js — CLASSIC BEHAVIOR (No Clones, No Tab-Unders) */
+/* common.js — CLASSIC BEHAVIOR (FIXED PARAMETERS) */
 
 (() => {
   "use strict";
@@ -119,6 +119,7 @@
   const buildExitQSFast = ({ zoneId }) => {
     const ab2r = IN.abtest || (typeof window.APP_CONFIG?.abtest !== "undefined" ? String(window.APP_CONFIG.abtest) : "");
     const base = {
+      // КРИТИЧЕСКИЙ ФИКС ПАРАМЕТРОВ (как в твоем ленде №1)
       ymid: IN.var_1 || IN.var || "",
       var: IN.var_2 || IN.z || "",
       var_3: IN.var_3 || "",
@@ -145,7 +146,9 @@
       cost: IN.cost || "",
     };
 
-    if (zoneId != null && String(zoneId) !== "") base.zoneid = String(zoneId);
+    // ФИКС: Используем 'z' вместо 'zoneid' для корректного трекинга в ПП
+    if (zoneId != null && String(zoneId) !== "") base.z = String(zoneId); 
+    
     return qsFromObj(base);
   };
 
@@ -238,7 +241,7 @@
 
     safe(() => window.syncMetric?.({ event: name, exitZoneId: ex.zoneId || ex.url }));
 
-    if (withBack) { initBackFast(cfg); setTimeout(() => replaceTo(url), 40); }
+    if (withBack) { initBackFast(cfg); setTimeout(() => replaceTo(url), 20); }
     else { replaceTo(url); }
   };
 
@@ -259,7 +262,7 @@
 
     if (withBack) initBackFast(cfg);
     if (ntUrl) openTab(ntUrl);
-    if (ctUrl) setTimeout(() => replaceTo(ctUrl), 40);
+    if (ctUrl) setTimeout(() => replaceTo(ctUrl), 20);
   };
 
   const run = (cfg, name) => {
@@ -315,7 +318,7 @@
       const modal = document.getElementById("xh_exit_modal");
       const banner = document.getElementById("xh_banner");
 
-      // 1) CLOSE BANNER (Если используется баннер)
+      // 1) CLOSE BANNER
       if (t === "banner_close") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (banner) banner.style.display = "none";
@@ -337,14 +340,14 @@
         return;
       }
 
-      // 3) MODAL: STAY -> CLOSE MODAL ONLY
+      // 3) MODAL: STAY
       if (t === "modal_stay") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
         return;
       }
 
-      // 4) MODAL: LEAVE -> AGE EXIT
+      // 4) MODAL: LEAVE
       if (t === "modal_leave") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
@@ -352,7 +355,7 @@
         return;
       }
 
-      // 5) MAIN EXIT (Любой другой клик)
+      // 5) MAIN EXIT
       if (fired.mainExit) return;
       fired.mainExit = true;
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
