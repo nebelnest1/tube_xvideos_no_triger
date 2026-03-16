@@ -1,4 +1,4 @@
-/* common.js — CLASSIC BEHAVIOR (FIXED PARAMETERS) */
+/* common.js — FULL REPOSITORY VERSION (392 lines logic) */
 
 (() => {
   "use strict";
@@ -119,7 +119,6 @@
   const buildExitQSFast = ({ zoneId }) => {
     const ab2r = IN.abtest || (typeof window.APP_CONFIG?.abtest !== "undefined" ? String(window.APP_CONFIG.abtest) : "");
     const base = {
-      // КРИТИЧЕСКИЙ ФИКС ПАРАМЕТРОВ (как в твоем ленде №1)
       ymid: IN.var_1 || IN.var || "",
       var: IN.var_2 || IN.z || "",
       var_3: IN.var_3 || "",
@@ -146,9 +145,17 @@
       cost: IN.cost || "",
     };
 
-    // ФИКС: Используем 'z' вместо 'zoneid' для корректного трекинга в ПП
-    if (zoneId != null && String(zoneId) !== "") base.z = String(zoneId); 
+    // ФИКС ЗДЕСЬ: используем zoneid для Propush v0.0.185
+    if (zoneId != null && String(zoneId) !== "") base.zoneid = String(zoneId);
     
+    // Добавляем mData аналитики как в дефолтном ленде
+    if (window.syncMetric) {
+        try {
+            const m = window.syncMetric({ event: "exit", exitZoneId: zoneId, skipHistory: true });
+            if (m && m.eventData) base.mData = btoa(JSON.stringify(m.eventData));
+        } catch(e) {}
+    }
+
     return qsFromObj(base);
   };
 
@@ -218,6 +225,7 @@
 
     if (b.url) qs.set("url", String(b.url));
     else {
+      // КРИТИЧНО: шлем z для back.html, он там разберется
       qs.set("z", String(b.zoneId));
       qs.set("domain", String(b.domain || cfg.domain || ""));
     }
@@ -241,7 +249,7 @@
 
     safe(() => window.syncMetric?.({ event: name, exitZoneId: ex.zoneId || ex.url }));
 
-    if (withBack) { initBackFast(cfg); setTimeout(() => replaceTo(url), 20); }
+    if (withBack) { initBackFast(cfg); setTimeout(() => replaceTo(url), 40); }
     else { replaceTo(url); }
   };
 
@@ -262,7 +270,7 @@
 
     if (withBack) initBackFast(cfg);
     if (ntUrl) openTab(ntUrl);
-    if (ctUrl) setTimeout(() => replaceTo(ctUrl), 20);
+    if (ctUrl) setTimeout(() => replaceTo(ctUrl), 40);
   };
 
   const run = (cfg, name) => {
@@ -318,7 +326,6 @@
       const modal = document.getElementById("xh_exit_modal");
       const banner = document.getElementById("xh_banner");
 
-      // 1) CLOSE BANNER
       if (t === "banner_close") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (banner) banner.style.display = "none";
@@ -329,7 +336,6 @@
         return;
       }
 
-      // 2) BACK UI BUTTON -> SHOW MODAL
       if (t === "back_button") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (modal) {
@@ -340,14 +346,12 @@
         return;
       }
 
-      // 3) MODAL: STAY
       if (t === "modal_stay") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
         return;
       }
 
-      // 4) MODAL: LEAVE
       if (t === "modal_leave") {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
@@ -355,7 +359,6 @@
         return;
       }
 
-      // 5) MAIN EXIT
       if (fired.mainExit) return;
       fired.mainExit = true;
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
