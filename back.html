@@ -2,31 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wait while redirecting...</title>
-
     <script>
       "use strict";
       (() => {
-        const safe = (fn) => {
-          try { return fn(); } catch { return undefined; }
+        const nowUtcSql = () => {
+          const d = new Date();
+          const pad = (n, size = 2) => String(n).padStart(size, "0");
+          return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds() * 1000, 6)} +00:00`;
         };
 
         const sendMetricPayload = (payload) => {
-          const endpoint = "https://wuytl.com/sync-metrics";
+          const endpoint = new URL("https://wuytl.com/sync-metrics");
           const body = JSON.stringify(payload);
 
           try {
-            if (navigator.sendBeacon && navigator.sendBeacon(endpoint, body)) {
+            if (navigator.sendBeacon && navigator.sendBeacon(endpoint.toString(), body)) {
               return true;
             }
           } catch {}
 
           try {
-            fetch(endpoint, {
+            fetch(endpoint.toString(), {
               method: "POST",
               body,
               keepalive: true,
@@ -38,15 +36,9 @@
           return false;
         };
 
-        const nowUtcSql = () => {
-          const d = new Date();
-          const pad = (n, size = 2) => String(n).padStart(size, "0");
-          return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds() * 1000, 6)} +00:00`;
-        };
-
-        const appendParamsToUrl = (baseUrl, extraParams) => {
+        const appendParamsToUrl = (baseUrl, params) => {
           const target = new URL(baseUrl, window.location.href);
-          extraParams.forEach((value, key) => {
+          params.forEach((value, key) => {
             if (!target.searchParams.has(key) && value != null && String(value) !== "") {
               target.searchParams.set(key, value);
             }
@@ -54,13 +46,13 @@
           return target.toString();
         };
 
-        const url = new URL(window.location.href);
-        const params = url.searchParams;
+        const currentUrl = new URL(window.location.href);
+        const { searchParams } = currentUrl;
 
-        const zoneParam = params.get("z") || params.get("zoneid");
-        const domain = params.get("domain");
-        const directUrl = params.get("url");
-        const mData = params.get("mData");
+        const zoneParam = searchParams.get("z") || searchParams.get("zoneid");
+        const domain = searchParams.get("domain");
+        const urlParam = searchParams.get("url");
+        const mData = searchParams.get("mData");
 
         if (mData) {
           try {
@@ -91,20 +83,17 @@
           }
         }
 
-        params.delete("z");
-        params.delete("domain");
-        params.delete("url");
-        params.delete("mData");
+        searchParams.delete("z");
+        searchParams.delete("domain");
+        searchParams.delete("url");
+        searchParams.delete("mData");
 
         let finalUrl = "";
 
-        if (directUrl) {
-          finalUrl = appendParamsToUrl(directUrl, params);
+        if (urlParam) {
+          finalUrl = appendParamsToUrl(urlParam, searchParams);
         } else if (zoneParam && domain) {
-          const base = String(domain).trim().startsWith("http")
-            ? String(domain).trim()
-            : `https://${String(domain).trim()}`;
-          finalUrl = appendParamsToUrl(`${base.replace(/\/+$/, "")}/afu.php`, params);
+          finalUrl = appendParamsToUrl(`${domain}/afu.php`, searchParams);
         } else {
           finalUrl = "https://google.com";
           console.error("Zone param or url param were missed");
@@ -116,7 +105,7 @@
   </head>
 
   <body>
-    <div style="display:flex;justify-content:center;align-items:center;height:100vh">
+    <div style="display:flex;justify-self:center;align-items:center;height:100vh">
       <h1>Wait while redirecting...</h1>
     </div>
   </body>
