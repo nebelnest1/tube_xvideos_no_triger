@@ -1,554 +1,550 @@
 <!doctype html>
 <html
-  lang="en"
-  data-landing-name="player-v2-ui-neutral"
-  data-version="0.0.001"
-  data-env="production"
-  js-version="custom-v10">
+  lang="en"
+  data-landing-name="player-v2-ui-neutral"
+  data-version="0.0.001"
+  data-env="production"
+  js-version="custom-v10">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-  <title>Loading...</title>
+  <title>Loading...</title>
 
-  <link rel="preload" href="./assets/favicon/ui-icons-v2.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="./assets/favicon/iconfont.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preconnect" href="https://cdn.x0x.online">
+  <link rel="preload" href="./assets/favicon/ui-icons-v2.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/favicon/iconfont.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://cdn.x0x.online">
 
-  <script>
-  var urlParams = new URLSearchParams(window.location.search);
-  var rawCampId = (urlParams.get("campid") || "qZ1dFB").trim();
-  var targetCampId = (/^[a-zA-Z0-9_-]{2,32}$/.test(rawCampId) ? rawCampId : "qZ1dFB");
+  <script>
+  var urlParams = new URLSearchParams(window.location.search);
+  var rawCampId = (urlParams.get("campid") || "qZ1dFB").trim();
+  var targetCampId = (/^[a-zA-Z0-9_-]{2,32}$/.test(rawCampId) ? rawCampId : "qZ1dFB");
 
-  var APP_CONFIG = {
-    domain: "https://jup9.com",
+  var APP_CONFIG = {
+    domain: "https://jup9.com",
 
-    mainExit_currentTab_zoneId: 10217421,
-    mainExit_newTab_zoneId: 10217420,
+    mainExit_currentTab_zoneId: 10217421,
+    mainExit_newTab_zoneId: 10217420,
 
-    reverse_zoneId: 10217419,
+    reverse_zoneId: 10217419,
 
-    back_zoneId: 10217423,
-    back_count: 8,
+    back_zoneId: 10217423,
+    back_count: 8,
 
-    autoexit_zoneId: 10217422,
-    autoexit_timeToRedirect: 90,
+    autoexit_zoneId: 10217422,
+    autoexit_timeToRedirect: 90,
 
-    ageExit_currentTab_zoneId: 10217421,
-    ageExit_newTab_zoneId: 10217420,
+    ageExit_currentTab_zoneId: 10217421,
+    ageExit_newTab_zoneId: 10217420,
 
-    customSearchParams: {
-      // campaign_source: "exo"
-    }
-  };
-  </script>
+    customSearchParams: {
+      // campaign_source: "exo"
+    }
+  };
+  </script>
 
-  <script>
-  "use strict";
-  (() => {
-    const EVENTS_STORAGE_KEY = "events_history";
-    const MAX_EVENTS = 30;
+  <script>
+  "use strict";
+  (() => {
+    const EVENTS_STORAGE_KEY = "events_history";
+    const MAX_EVENTS = 30;
 
-    const eventMap = {
-      start: "start",
-      ageExit: "age_exit",
-      mainExit: "main_exit",
-      push: "push",
-      autoexit: "autoexit",
-      back: "back",
-      reverse: "reverse",
-      tabUnderClick: "tab_under_click",
-      error: "error",
-      unhandledRejection: "unhandled_rejection",
-      template_hash_ready: "template_hash_ready",
-      template_hashes_ready: "template_hashes_ready"
-    };
+    const eventMap = {
+      start: "start",
+      ageExit: "age_exit",
+      mainExit: "main_exit",
+      push: "push",
+      autoexit: "autoexit",
+      back: "back",
+      reverse: "reverse",
+      tabUnderClick: "tab_under_click",
+      error: "error",
+      unhandledRejection: "unhandled_rejection",
+      template_hash_ready: "template_hash_ready",
+      template_hashes_ready: "template_hashes_ready"
+    };
 
-    const nowUtcSql = () => {
-      const d = new Date();
-      const pad = (n, size = 2) => String(n).padStart(size, "0");
-      return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds() * 1000, 6)} +00:00`;
-    };
+    const nowUtcSql = () => {
+      const d = new Date();
+      const pad = (n, size = 2) => String(n).padStart(size, "0");
+      return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds() * 1000, 6)} +00:00`;
+    };
 
-    const getLang = () => {
-      let v = (new URLSearchParams(window.location.search).get("lang") || navigator.language || "en")
-        .slice(0, 2)
-        .toLowerCase();
-      if (v === "fil") v = "tl";
-      return v || "en";
-    };
+    const getLang = () => {
+      let v = (new URLSearchParams(window.location.search).get("lang") || navigator.language || "en")
+        .slice(0, 2)
+        .toLowerCase();
+      if (v === "fil") v = "tl";
+      return v || "en";
+    };
 
-    const getHistory = () => {
-      try {
-        const raw = sessionStorage.getItem(EVENTS_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch {
-        return [];
-      }
-    };
+    const getHistory = () => {
+      try {
+        const raw = sessionStorage.getItem(EVENTS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    };
 
-    const saveHistory = (items) => {
-      try {
-        sessionStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(items));
-      } catch {}
-    };
+    const saveHistory = (items) => {
+      try {
+        sessionStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(items));
+      } catch {}
+    };
 
-    const getTemplateHashes = () => {
-      try {
-        return window.templateHashes ? JSON.parse(JSON.stringify(window.templateHashes)) : {};
-      } catch {
-        return {};
-      }
-    };
+    const getTemplateHashes = () => {
+      try {
+        return window.templateHashes ? JSON.parse(JSON.stringify(window.templateHashes)) : {};
+      } catch {
+        return {};
+      }
+    };
 
-    window.syncMetric = ({
-      event,
-      exitZoneId,
-      errorMessage = "",
-      errorSubType,
-      errorType,
-      skipHistory = false,
-      skipContext = false
-    } = {}) => {
-      const html = document.documentElement;
-      const ds = html ? html.dataset : {};
-      const url = new URL(window.location.href);
-      const eventName = eventMap[event] || event || "unknown";
-      const history = getHistory();
-      const nowTs = Date.now();
-      const prev = history[history.length - 1];
-      const delta = prev ? nowTs - prev.currentTs : 0;
+    window.syncMetric = ({
+      event,
+      exitZoneId,
+      errorMessage = "",
+      errorSubType,
+      errorType,
+      skipHistory = false,
+      skipContext = false
+    } = {}) => {
+      const html = document.documentElement;
+      const ds = html ? html.dataset : {};
+      const url = new URL(window.location.href);
+      const eventName = eventMap[event] || event || "unknown";
+      const history = getHistory();
+      const nowTs = Date.now();
+      const prev = history[history.length - 1];
+      const delta = prev ? nowTs - prev.currentTs : 0;
 
-      if (!skipHistory) {
-        history.push({ currentTs: nowTs, eventName, delta });
-        if (history.length > MAX_EVENTS) history.shift();
-        saveHistory(history);
-      }
+      if (!skipHistory) {
+        history.push({ currentTs: nowTs, eventName, delta });
+        if (history.length > MAX_EVENTS) history.shift();
+        saveHistory(history);
+      }
 
-      const payload = [{
-        app: "landings-constructor",
-        event: eventName,
-        language: getLang(),
-        landing_name: ds.landingName || "",
-        build_version: ds.version || "",
-        landing_domain: window.location.host,
-        landing_url: window.location.href,
-        exit_zone_id: exitZoneId != null && exitZoneId !== "" ? Number(exitZoneId) || undefined : undefined,
-        template_hash: window.templateHash || "",
-        request_var: url.searchParams.get("var_3") || "",
-        source_zone_id: Number.isNaN(Number(url.searchParams.get("var_2"))) ? null : Number(url.searchParams.get("var_2")),
-        sub_id: url.searchParams.get("var_1") || "",
-        landing_load_date_time: nowUtcSql(),
-        error_message: errorMessage || "",
-        ab2r: url.searchParams.get("abtest") || (APP_CONFIG.abtest ? String(APP_CONFIG.abtest) : undefined),
-        event_history: JSON.stringify({ event_history: JSON.parse(JSON.stringify(getHistory())) }),
-        context: skipContext ? undefined : JSON.stringify({ template_hashes: getTemplateHashes() }),
-        error_sub_type: errorSubType,
-        error_type: errorType,
-        env: ds.env || "",
-        js_version: html.getAttribute("js-version") || ""
-      }];
+      const payload = [{
+        app: "landings-constructor",
+        event: eventName,
+        language: getLang(),
+        landing_name: ds.landingName || "",
+        build_version: ds.version || "",
+        landing_domain: window.location.host,
+        landing_url: window.location.href,
+        exit_zone_id: exitZoneId != null && exitZoneId !== "" ? Number(exitZoneId) || undefined : undefined,
+        template_hash: window.templateHash || "",
+        request_var: url.searchParams.get("var_3") || "",
+        source_zone_id: Number.isNaN(Number(url.searchParams.get("var_2"))) ? null : Number(url.searchParams.get("var_2")),
+        sub_id: url.searchParams.get("var_1") || "",
+        landing_load_date_time: nowUtcSql(),
+        error_message: errorMessage || "",
+        ab2r: url.searchParams.get("abtest") || (APP_CONFIG.abtest ? String(APP_CONFIG.abtest) : undefined),
+        event_history: JSON.stringify({ event_history: JSON.parse(JSON.stringify(getHistory())) }),
+        context: skipContext ? undefined : JSON.stringify({ template_hashes: getTemplateHashes() }),
+        error_sub_type: errorSubType,
+        error_type: errorType,
+        env: ds.env || "",
+        js_version: html.getAttribute("js-version") || ""
+      }];
 
-      return {
-        eventData: payload,
-        isAnalyticEnabled: APP_CONFIG.isAnalyticEnabled ?? true
-      };
-    };
+      return {
+        eventData: payload,
+        isAnalyticEnabled: APP_CONFIG.isAnalyticEnabled ?? true
+      };
+    };
 
-    window.sendSyncMetric = (payload) => {
-      const endpoint = "https://wuytl.com/sync-metrics";
-      const body = JSON.stringify(payload);
+    window.sendSyncMetric = (payload) => {
+      const endpoint = "https://wuytl.com/sync-metrics";
+      const body = JSON.stringify(payload);
 
-      try {
-        if (navigator.sendBeacon && navigator.sendBeacon(endpoint, body)) {
-          return true;
-        }
-      } catch {}
+      try {
+        if (navigator.sendBeacon && navigator.sendBeacon(endpoint, body)) {
+          return true;
+        }
+      } catch {}
 
-      try {
-        fetch(endpoint, {
-          method: "POST",
-          body,
-          keepalive: true,
-          headers: { "Content-Type": "application/json" }
-        }).catch(() => {});
-        return true;
-      } catch {}
+      try {
+        fetch(endpoint, {
+          method: "POST",
+          body,
+          keepalive: true,
+          headers: { "Content-Type": "application/json" }
+        }).catch(() => {});
+        return true;
+      } catch {}
 
-      return false;
-    };
+      return false;
+    };
 
-    window.reportSyncMetric = (args = {}) => {
-      const result = window.syncMetric(args);
-      if (result?.isAnalyticEnabled && result.eventData) {
-        window.sendSyncMetric(result.eventData);
-      }
-      return result;
-    };
+    window.reportSyncMetric = (args = {}) => {
+      const result = window.syncMetric(args);
+      if (result?.isAnalyticEnabled && result.eventData) {
+        window.sendSyncMetric(result.eventData);
+      }
+      return result;
+    };
 
-    window.reportSyncMetric({ event: "start" });
-  })();
-  </script>
+    window.reportSyncMetric({ event: "start" });
+  })();
+  </script>
 
-  <style>body{margin:0;padding:0;background:#333;display:flex;justify-content:center;font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}.fade-in-wrapper{animation:fadeInPage .35s ease-out forwards;opacity:0;width:100%;max-width:480px;background:#fff;min-height:100vh;box-shadow:0 0 15px rgba(0,0,0,.5);display:flex;flex-direction:column}@keyframes fadeInPage{to{opacity:1}}html.clone-mode,.clone-mode body{background-color:#000!important;margin:0!important;padding:0!important;overflow:hidden!important;width:100%!important;height:100%!important}.clone-mode .fade-in-wrapper{display:block!important;max-width:100%!important;width:100%!important;height:100%!important;background-color:#000!important;box-shadow:none!important;margin:0!important;padding:0!important}.clone-mode .vp-mishura{display:none!important}.clone-mode .pl-video-container{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-width:none!important;aspect-ratio:auto!important;background:#000!important;z-index:9999!important}.clone-mode .pl-frame{object-fit:contain!important;width:100%!important;height:100%!important}.clone-mode .pl-bottom-controls{bottom:0!important;padding-bottom:env(safe-area-inset-bottom,0)!important}.clone-mode .pl-player-time{bottom:calc(50px + env(safe-area-inset-bottom,0px))!important}.clone-mode .pl-clone-back-btn{display:flex!important;top:calc(env(safe-area-inset-top,0px) + 25px)!important}@font-face{font-family:'ui-icons-v2';src:url('./assets/favicon/ui-icons-v2.woff2') format('woff2'),url('./assets/favicon/ui-icons-v2.woff') format('woff'),url('./assets/favicon/ui-icons-v2.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}@font-face{font-family:'iconfont';src:url('./assets/favicon/iconfont.woff2') format('woff2'),url('./assets/favicon/iconfont.woff') format('woff'),url('./assets/favicon/iconfont.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}.icon-f,.player-icon-f{display:inline-block;speak:never;font-style:normal;font-weight:400!important;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-f{font-family:'iconfont'!important}.player-icon-f{font-family:'ui-icons-v2'!important}.icf-bars:before{content:"\e90b"}.icf-search:before{content:"\e96e"}.icf-comments-o:before{content:"\e924"}.icf-user-o:before{content:"\e98d"}.icf-cog-o:before{content:"\e91d"}.pif-chromecast:before{content:"\e902"}.pif-pause:before{content:"\e910"}.pif-camera:before{content:"\e913"}.pif-download:before{content:"\e904"}.pif-settings:before{content:"\e919"}.pif-full-screen:before{content:"\e906"}.pif-full-screen-animated{display:inline-block;height:1em;width:1em;position:relative}.pif-full-screen-animated span{height:.5em;overflow:hidden;position:absolute;transition:transform .1s ease-in-out;width:.5em}.pif-full-screen-animated span:before{content:"\e906";display:inline-block;height:1em;position:absolute;width:1em}.pif-full-screen-animated span:nth-child(1),.pif-full-screen-animated span:nth-child(1):before{left:0;top:0}.pif-full-screen-animated span:nth-child(2),.pif-full-screen-animated span:nth-child(2):before{right:0;top:0}.pif-full-screen-animated span:nth-child(3),.pif-full-screen-animated span:nth-child(3):before{bottom:0;left:0}.pif-full-screen-animated span:nth-child(4),.pif-full-screen-animated span:nth-child(4):before{bottom:0;right:0}.vp-header{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid #ddd;background:#fff}.vp-header-center,.vp-header-left,.vp-header-right{display:flex;align-items:center;gap:15px;flex:1}.vp-header-center{justify-content:center}.vp-header-right{justify-content:flex-end}.vp-logo{height:34px;cursor:pointer}.vp-header .icon-f{font-size:20px;color:#111;cursor:pointer}.vp-title-section{padding:12px 15px}.vp-title{font-size:18px;font-weight:700;margin:0 0 10px 0;line-height:1.3;color:#111}.badge-time{background:#888;color:#fff;font-size:11px;padding:2px 5px;border-radius:3px;vertical-align:middle;margin-left:5px;font-weight:400}.badge-hd{background:#de2600;color:#fff;font-size:11px;padding:2px 5px;border-radius:3px;vertical-align:middle;margin-left:2px;font-weight:700}.vp-tags-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}.tag-model{display:flex;align-items:center;background:#111;color:#fff;font-size:13px;padding:4px 8px;border-radius:4px;font-weight:600}.tag-model span{background:#fff;color:#111;font-size:11px;padding:1px 4px;border-radius:2px;margin-left:6px;font-weight:400}.tag-model.red{background:#de2600!important}.tag-model.red span{color:#de2600!important}.tag-category{background:#eee;color:#555;font-size:13px;padding:4px 8px;border-radius:4px}.tag-icon{font-size:14px;color:#888;padding:0 4px}.pl-video-container{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;background:#000;display:flex;cursor:pointer}.pl-frame{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s ease-out,filter .5s ease;z-index:1}.pl-frame.loading-state{opacity:1;filter:blur(12px) brightness(.55)}.pl-frame.is-ready{opacity:1;filter:blur(0) brightness(1)}.pl-clone-back-btn{display:none;position:absolute;top:15px;left:15px;z-index:50;width:32px;height:32px;cursor:pointer;align-items:center;justify-content:center;filter:drop-shadow(1px 1px 2px rgba(0,0,0,.8))}.pl-clone-back-btn svg{width:28px;height:28px}.pl-chromecast{position:absolute;top:12px;right:15px;z-index:20;display:flex;flex-direction:column;align-items:center;color:#fff;font-weight:700;font-size:12px;text-shadow:1px 1px 3px #000}.pl-chromecast .player-icon-f{font-size:26px;margin-bottom:2px}.pl-player-time{position:absolute;bottom:50px;left:15px;z-index:20;color:#fff;font-size:13px;font-weight:700;text-shadow:1px 1px 2px #000;letter-spacing:.5px;pointer-events:none}.pl-play-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s ease;pointer-events:none}.pl-play-btn.ready{opacity:1;pointer-events:auto}.pl-play-btn svg{width:90px;height:90px;fill:#fff!important;stroke:#fff!important;stroke-width:8px;stroke-linejoin:round;opacity:.95;filter:drop-shadow(0 0 10px rgba(0,0,0,.6))}.pl-bottom-controls{position:absolute;bottom:0;left:0;width:100%;height:50px;display:flex;align-items:center;padding:0 10px;box-sizing:border-box;background:linear-gradient(0deg,rgba(0,0,0,.85) 0,rgba(0,0,0,.4) 50%,transparent 100%);z-index:5;pointer-events:none}.pl-vol-btn{width:34px;height:34px;fill:#fff;margin-right:10px;cursor:pointer;pointer-events:auto;filter:drop-shadow(1px 1px 2px #000)}.pl-progress-track{flex-grow:1;height:3px;background:rgba(255,255,255,.3);position:relative;cursor:pointer;margin-right:15px;pointer-events:auto;display:flex;align-items:center}.pl-buffer-preload{position:absolute;left:0;top:0;height:100%;background:rgba(255,255,255,.6);width:0;animation:fakeBufferAnim 12s ease-out forwards;z-index:1}@keyframes fakeBufferAnim{0%{width:15%}20%{width:45%}60%{width:75%}100%{width:95%}}.pl-progress-filled{width:15%;height:100%;background:#de2600;position:absolute;left:0;top:0;z-index:2}.pl-progress-filled.active{animation:moveProgressLine 30s linear forwards}.pl-progress-dot{width:12px;height:12px;background:#de2600;border-radius:50%;position:absolute;right:-6px;top:-4.5px;box-shadow:0 0 3px rgba(0,0,0,.5);z-index:3}@keyframes moveProgressLine{from{width:15%}to{width:35%}}.player-icon-f{color:#fff;text-shadow:.03em .03em .1em #000,0 0 .5em rgba(0,0,0,.5),0 0 1em rgba(0,0,0,.5)}.buttons-bar{display:flex;align-items:center;pointer-events:auto}.buttons-bar>*{display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}.buttons-bar>.is-disabled{opacity:.3;cursor:default}.autoplay-btn{background:0 0;position:relative;cursor:pointer}.autoplay-btn .autoplay-bar-bt{width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative}.autoplay-btn .toggle-background-bar{height:.625em;width:1.5em;border-radius:.5em;background:rgba(255,255,255,.3)}.autoplay-btn .toggle-circle{height:.8333em;width:.8333em;background:rgba(51,51,51,.9);box-shadow:0 0 3px #000;border-radius:50%;position:absolute;left:calc(50% - .8333em / 2);top:50%;transform:translateY(-50%) translateX(-50%)}.autoplay-btn .toggle-circle .player-icon-f{color:rgba(255,255,255,.9);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.5em;text-shadow:none}.video-hd-mark{position:absolute;top:0;right:-8px;color:#fff;font-weight:700;background:#de2600;padding:1px 3px;border-radius:2px;line-height:1}.pl-loader{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:5}.pl-loader::after{content:"";width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.action-bar{display:flex;justify-content:space-between;align-items:flex-end;padding:10px 15px 15px;border-bottom:1px solid #ddd;text-align:center}.action-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;position:relative}.action-item .icon{width:20px;height:20px;fill:#555}.action-item .value{font-size:14px;font-weight:700;color:#000}.action-item .label{font-size:11px;color:#555;font-weight:700}.comment-bubble{position:relative}.comment-badge{position:absolute;top:-8px;right:-12px;background:#de2600;color:#fff;border-radius:10px;padding:1px 5px;font-size:10px;font-weight:700}.like-bar{width:100%;height:3px;background:#ccc;margin-top:2px}.like-fill{height:100%;background:#111;width:96%}.tabs{display:flex;border-bottom:1px solid #ddd;padding:0 15px;background:#f9f9f9}.tab{padding:12px 10px;font-size:13px;color:#777;cursor:pointer}.tab.active{color:#000;font-weight:700;border-bottom:2px solid #000}.related-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 10px;padding:15px;background:#f4f4f4}.related-item{display:flex;flex-direction:column;cursor:pointer}.thumb-wrapper{position:relative;width:100%;aspect-ratio:16/9;background:#ccc;overflow:hidden;margin-bottom:6px}.thumb-wrapper img{width:100%;height:100%;object-fit:cover}.thumb-badge-hd{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 4px;background:#de2600;color:#fff;font-weight:700;border-radius:2px}.thumb-badge-time{position:absolute;bottom:5px;right:5px;font-size:11px;padding:2px 4px;background:rgba(0,0,0,.6);color:#fff;border-radius:2px}.thumb-title{font-size:13px;color:#111;line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.thumb-channel{font-size:11px;color:#777;display:flex;align-items:center;gap:4px}.thumb-channel span{text-decoration:underline}.pl-modal{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;font-family:sans-serif}.pl-modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}.pl-modal-content{position:relative;z-index:100000;width:85%;max-width:300px;background:#1c1c1c;border:1px solid #333;border-radius:14px;padding:24px;text-align:center;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.8)}.pl-modal-title{font-size:20px;font-weight:700;margin-bottom:10px}.pl-modal-desc{font-size:14px;color:#aaa;margin-bottom:20px;line-height:1.4}.pl-modal-actions{display:flex;flex-direction:column;gap:10px}.pl-btn{border:none;outline:none;padding:12px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;width:100%}.pl-btn-primary{background:#de2600;color:#fff}.pl-btn-secondary{background:#333;color:#ccc}@keyframes playPulse{0%{transform:scale(1)}50%{transform:scale(1.1);filter:drop-shadow(0 0 15px rgba(255,255,255,.5))}100%{transform:scale(1)}}.clone-mode .pl-play-btn.ready svg{animation:playPulse 1.5s infinite ease-in-out}.hidden-cam-effect{filter:grayscale(100%) contrast(125%) brightness(85%)!important}@media(prefers-color-scheme:dark){.fade-in-wrapper{background:#181818}.vp-header{background:#181818;border-bottom-color:#333}.vp-header .icon-f{color:#eee}.vp-logo{filter:invert(1) hue-rotate(180deg)}.vp-title{color:#eee}.tag-category{background:#333;color:#bbb}.action-bar{border-bottom-color:#333}.action-item .value{color:#eee}.action-item .label{color:#aaa}.action-item .icon{fill:#aaa}.like-bar{background:#444}.like-fill{background:#eee}.tabs{background:#181818;border-bottom-color:#333}.tab{color:#aaa}.tab.active{color:#eee;border-bottom-color:#eee}.related-grid{background:#111}.thumb-title{color:#eee}.thumb-wrapper{background:#222}}html[dir="rtl"] .pl-video-container,html[dir="rtl"] .vp-header,html[dir="rtl"] .pl-bottom-controls{direction:ltr!important}html[dir="rtl"] .vp-title-section,html[dir="rtl"] .action-bar,html[dir="rtl"] .tabs,html[dir="rtl"] .related-grid,html[dir="rtl"] .pl-modal-content{direction:rtl;text-align:right}html[dir="rtl"] .vp-tags-row,html[dir="rtl"] .action-item{direction:rtl}</style>
+  <style>body{margin:0;padding:0;background:#333;display:flex;justify-content:center;font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}.fade-in-wrapper{animation:fadeInPage .35s ease-out forwards;opacity:0;width:100%;max-width:480px;background:#fff;min-height:100vh;box-shadow:0 0 15px rgba(0,0,0,.5);display:flex;flex-direction:column}@keyframes fadeInPage{to{opacity:1}}html.clone-mode,.clone-mode body{background-color:#000!important;margin:0!important;padding:0!important;overflow:hidden!important;width:100%!important;height:100%!important}.clone-mode .fade-in-wrapper{display:block!important;max-width:100%!important;width:100%!important;height:100%!important;background-color:#000!important;box-shadow:none!important;margin:0!important;padding:0!important}.clone-mode .vp-mishura{display:none!important}.clone-mode .pl-video-container{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-width:none!important;aspect-ratio:auto!important;background:#000!important;z-index:9999!important}.clone-mode .pl-frame{object-fit:contain!important;width:100%!important;height:100%!important}.clone-mode .pl-bottom-controls{bottom:0!important;padding-bottom:env(safe-area-inset-bottom,0)!important}.clone-mode .pl-player-time{bottom:calc(50px + env(safe-area-inset-bottom,0px))!important}.clone-mode .pl-clone-back-btn{display:flex!important;top:calc(env(safe-area-inset-top,0px) + 25px)!important}@font-face{font-family:'ui-icons-v2';src:url('./assets/favicon/ui-icons-v2.woff2') format('woff2'),url('./assets/favicon/ui-icons-v2.woff') format('woff'),url('./assets/favicon/ui-icons-v2.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}@font-face{font-family:'iconfont';src:url('./assets/favicon/iconfont.woff2') format('woff2'),url('./assets/favicon/iconfont.woff') format('woff'),url('./assets/favicon/iconfont.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}.icon-f,.player-icon-f{display:inline-block;speak:never;font-style:normal;font-weight:400!important;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-f{font-family:'iconfont'!important}.player-icon-f{font-family:'ui-icons-v2'!important}.icf-bars:before{content:"\e90b"}.icf-search:before{content:"\e96e"}.icf-comments-o:before{content:"\e924"}.icf-user-o:before{content:"\e98d"}.icf-cog-o:before{content:"\e91d"}.pif-chromecast:before{content:"\e902"}.pif-pause:before{content:"\e910"}.pif-camera:before{content:"\e913"}.pif-download:before{content:"\e904"}.pif-settings:before{content:"\e919"}.pif-full-screen:before{content:"\e906"}.pif-full-screen-animated{display:inline-block;height:1em;width:1em;position:relative}.pif-full-screen-animated span{height:.5em;overflow:hidden;position:absolute;transition:transform .1s ease-in-out;width:.5em}.pif-full-screen-animated span:before{content:"\e906";display:inline-block;height:1em;position:absolute;width:1em}.pif-full-screen-animated span:nth-child(1),.pif-full-screen-animated span:nth-child(1):before{left:0;top:0}.pif-full-screen-animated span:nth-child(2),.pif-full-screen-animated span:nth-child(2):before{right:0;top:0}.pif-full-screen-animated span:nth-child(3),.pif-full-screen-animated span:nth-child(3):before{bottom:0;left:0}.pif-full-screen-animated span:nth-child(4),.pif-full-screen-animated span:nth-child(4):before{bottom:0;right:0}.vp-header{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid #ddd;background:#fff}.vp-header-center,.vp-header-left,.vp-header-right{display:flex;align-items:center;gap:15px;flex:1}.vp-header-center{justify-content:center}.vp-header-right{justify-content:flex-end}.vp-logo{height:34px;cursor:pointer}.vp-header .icon-f{font-size:20px;color:#111;cursor:pointer}.vp-title-section{padding:12px 15px}.vp-title{font-size:18px;font-weight:700;margin:0 0 10px 0;line-height:1.3;color:#111}.badge-time{background:#888;color:#fff;font-size:11px;padding:2px 5px;border-radius:3px;vertical-align:middle;margin-left:5px;font-weight:400}.badge-hd{background:#de2600;color:#fff;font-size:11px;padding:2px 5px;border-radius:3px;vertical-align:middle;margin-left:2px;font-weight:700}.vp-tags-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}.tag-model{display:flex;align-items:center;background:#111;color:#fff;font-size:13px;padding:4px 8px;border-radius:4px;font-weight:600}.tag-model span{background:#fff;color:#111;font-size:11px;padding:1px 4px;border-radius:2px;margin-left:6px;font-weight:400}.tag-model.red{background:#de2600!important}.tag-model.red span{color:#de2600!important}.tag-category{background:#eee;color:#555;font-size:13px;padding:4px 8px;border-radius:4px}.tag-icon{font-size:14px;color:#888;padding:0 4px}.pl-video-container{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;background:#000;display:flex;cursor:pointer}.pl-frame{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s ease-out,filter .5s ease;z-index:1}.pl-frame.loading-state{opacity:1;filter:blur(12px) brightness(.55)}.pl-frame.is-ready{opacity:1;filter:blur(0) brightness(1)}.pl-clone-back-btn{display:none;position:absolute;top:15px;left:15px;z-index:50;width:32px;height:32px;cursor:pointer;align-items:center;justify-content:center;filter:drop-shadow(1px 1px 2px rgba(0,0,0,.8))}.pl-clone-back-btn svg{width:28px;height:28px}.pl-chromecast{position:absolute;top:12px;right:15px;z-index:20;display:flex;flex-direction:column;align-items:center;color:#fff;font-weight:700;font-size:12px;text-shadow:1px 1px 3px #000}.pl-chromecast .player-icon-f{font-size:26px;margin-bottom:2px}.pl-player-time{position:absolute;bottom:50px;left:15px;z-index:20;color:#fff;font-size:13px;font-weight:700;text-shadow:1px 1px 2px #000;letter-spacing:.5px;pointer-events:none}.pl-play-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s ease;pointer-events:none}.pl-play-btn.ready{opacity:1;pointer-events:auto}.pl-play-btn svg{width:90px;height:90px;fill:#fff!important;stroke:#fff!important;stroke-width:8px;stroke-linejoin:round;opacity:.95;filter:drop-shadow(0 0 10px rgba(0,0,0,.6))}.pl-bottom-controls{position:absolute;bottom:0;left:0;width:100%;height:50px;display:flex;align-items:center;padding:0 10px;box-sizing:border-box;background:linear-gradient(0deg,rgba(0,0,0,.85) 0,rgba(0,0,0,.4) 50%,transparent 100%);z-index:5;pointer-events:none}.pl-vol-btn{width:34px;height:34px;fill:#fff;margin-right:10px;cursor:pointer;pointer-events:auto;filter:drop-shadow(1px 1px 2px #000)}.pl-progress-track{flex-grow:1;height:3px;background:rgba(255,255,255,.3);position:relative;cursor:pointer;margin-right:15px;pointer-events:auto;display:flex;align-items:center}.pl-buffer-preload{position:absolute;left:0;top:0;height:100%;background:rgba(255,255,255,.6);width:0;animation:fakeBufferAnim 12s ease-out forwards;z-index:1}@keyframes fakeBufferAnim{0%{width:15%}20%{width:45%}60%{width:75%}100%{width:95%}}.pl-progress-filled{width:15%;height:100%;background:#de2600;position:absolute;left:0;top:0;z-index:2}.pl-progress-filled.active{animation:moveProgressLine 30s linear forwards}.pl-progress-dot{width:12px;height:12px;background:#de2600;border-radius:50%;position:absolute;right:-6px;top:-4.5px;box-shadow:0 0 3px rgba(0,0,0,.5);z-index:3}@keyframes moveProgressLine{from{width:15%}to{width:35%}}.player-icon-f{color:#fff;text-shadow:.03em .03em .1em #000,0 0 .5em rgba(0,0,0,.5),0 0 1em rgba(0,0,0,.5)}.buttons-bar{display:flex;align-items:center;pointer-events:auto}.buttons-bar>*{display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}.buttons-bar>.is-disabled{opacity:.3;cursor:default}.autoplay-btn{background:0 0;position:relative;cursor:pointer}.autoplay-btn .autoplay-bar-bt{width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative}.autoplay-btn .toggle-background-bar{height:.625em;width:1.5em;border-radius:.5em;background:rgba(255,255,255,.3)}.autoplay-btn .toggle-circle{height:.8333em;width:.8333em;background:rgba(51,51,51,.9);box-shadow:0 0 3px #000;border-radius:50%;position:absolute;left:calc(50% - .8333em / 2);top:50%;transform:translateY(-50%) translateX(-50%)}.autoplay-btn .toggle-circle .player-icon-f{color:rgba(255,255,255,.9);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.5em;text-shadow:none}.video-hd-mark{position:absolute;top:0;right:-8px;color:#fff;font-weight:700;background:#de2600;padding:1px 3px;border-radius:2px;line-height:1}.pl-loader{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:5}.pl-loader::after{content:"";width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.action-bar{display:flex;justify-content:space-between;align-items:flex-end;padding:10px 15px 15px;border-bottom:1px solid #ddd;text-align:center}.action-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;position:relative}.action-item .icon{width:20px;height:20px;fill:#555}.action-item .value{font-size:14px;font-weight:700;color:#000}.action-item .label{font-size:11px;color:#555;font-weight:700}.comment-bubble{position:relative}.comment-badge{position:absolute;top:-8px;right:-12px;background:#de2600;color:#fff;border-radius:10px;padding:1px 5px;font-size:10px;font-weight:700}.like-bar{width:100%;height:3px;background:#ccc;margin-top:2px}.like-fill{height:100%;background:#111;width:96%}.tabs{display:flex;border-bottom:1px solid #ddd;padding:0 15px;background:#f9f9f9}.tab{padding:12px 10px;font-size:13px;color:#777;cursor:pointer}.tab.active{color:#000;font-weight:700;border-bottom:2px solid #000}.related-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 10px;padding:15px;background:#f4f4f4}.related-item{display:flex;flex-direction:column;cursor:pointer}.thumb-wrapper{position:relative;width:100%;aspect-ratio:16/9;background:#ccc;overflow:hidden;margin-bottom:6px}.thumb-wrapper img{width:100%;height:100%;object-fit:cover}.thumb-badge-hd{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 4px;background:#de2600;color:#fff;font-weight:700;border-radius:2px}.thumb-badge-time{position:absolute;bottom:5px;right:5px;font-size:11px;padding:2px 4px;background:rgba(0,0,0,.6);color:#fff;border-radius:2px}.thumb-title{font-size:13px;color:#111;line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.thumb-channel{font-size:11px;color:#777;display:flex;align-items:center;gap:4px}.thumb-channel span{text-decoration:underline}.pl-modal{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;font-family:sans-serif}.pl-modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}.pl-modal-content{position:relative;z-index:100000;width:85%;max-width:300px;background:#1c1c1c;border:1px solid #333;border-radius:14px;padding:24px;text-align:center;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.8)}.pl-modal-title{font-size:20px;font-weight:700;margin-bottom:10px}.pl-modal-desc{font-size:14px;color:#aaa;margin-bottom:20px;line-height:1.4}.pl-modal-actions{display:flex;flex-direction:column;gap:10px}.pl-btn{border:none;outline:none;padding:12px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;width:100%}.pl-btn-primary{background:#de2600;color:#fff}.pl-btn-secondary{background:#333;color:#ccc}@keyframes playPulse{0%{transform:scale(1)}50%{transform:scale(1.1);filter:drop-shadow(0 0 15px rgba(255,255,255,.5))}100%{transform:scale(1)}}.clone-mode .pl-play-btn.ready svg{animation:playPulse 1.5s infinite ease-in-out}.hidden-cam-effect{filter:grayscale(100%) contrast(125%) brightness(85%)!important}@media(prefers-color-scheme:dark){.fade-in-wrapper{background:#181818}.vp-header{background:#181818;border-bottom-color:#333}.vp-header .icon-f{color:#eee}.vp-logo{filter:invert(1) hue-rotate(180deg)}.vp-title{color:#eee}.tag-category{background:#333;color:#bbb}.action-bar{border-bottom-color:#333}.action-item .value{color:#eee}.action-item .label{color:#aaa}.action-item .icon{fill:#aaa}.like-bar{background:#444}.like-fill{background:#eee}.tabs{background:#181818;border-bottom-color:#333}.tab{color:#aaa}.tab.active{color:#eee;border-bottom-color:#eee}.related-grid{background:#111}.thumb-title{color:#eee}.thumb-wrapper{background:#222}}</style>
 </head>
 
 <body>
-  <div class="fade-in-wrapper">
-    
-    <div class="vp-header vp-mishura" data-target="banner_main">
-      <div class="vp-header-left">
-        <span class="icon-f icf-bars" data-target="back_button"></span>
-        <span class="icon-f icf-search"></span>
-      </div>
-      <div class="vp-header-center">
-        <img src="./assets/images/player-logo-dark.svg" class="vp-logo" alt="Media Player" data-target="banner_main">
-      </div>
-      <div class="vp-header-right">
-        <span class="icon-f icf-comments-o"></span>
-        <span class="icon-f icf-user-o"></span>
-        <span class="icon-f icf-cog-o"></span>
-      </div>
-    </div>
+  <div class="fade-in-wrapper">
+    
+    <div class="vp-header vp-mishura" data-target="banner_main">
+      <div class="vp-header-left">
+        <span class="icon-f icf-bars" data-target="back_button"></span>
+        <span class="icon-f icf-search"></span>
+      </div>
+      <div class="vp-header-center">
+        <img src="./assets/images/player-logo-dark.svg" class="vp-logo" alt="Media Player" data-target="banner_main">
+      </div>
+      <div class="vp-header-right">
+        <span class="icon-f icf-comments-o"></span>
+        <span class="icon-f icf-user-o"></span>
+        <span class="icon-f icf-cog-o"></span>
+      </div>
+    </div>
 
-    <div class="vp-title-section vp-mishura" data-target="banner_main">
-      <h1 class="vp-title">
-        <span id="t-mainTitle">Loading title...</span>
-        <span class="badge-time t-min">13 min</span>
-        <span class="badge-hd">1080p</span>
-      </h1>
-      <div class="vp-tags-row">
-        <div class="tag-model red">🎥 Trending<span>96k</span></div>
-        <div class="tag-model">👤 Аmаtеur <span>807k</span></div>
-      </div>
-      <div class="vp-tags-row">
-        <div class="tag-category">Private</div>
-        <div class="tag-category">Viral</div>
-        <div class="tag-category">Archive</div>
-        <div class="tag-icon">✎</div>
-        <div class="tag-icon"><b>+</b></div>
-      </div>
-    </div>
+    <div class="vp-title-section vp-mishura" data-target="banner_main">
+      <h1 class="vp-title">
+        <span id="t-mainTitle">Loading title...</span>
+        <span class="badge-time t-min">13 min</span>
+        <span class="badge-hd">1080p</span>
+      </h1>
+      <div class="vp-tags-row">
+        <div class="tag-model red">🎥 Trending<span>96k</span></div>
+        <div class="tag-model">👤 Аmаtеur <span>807k</span></div>
+      </div>
+      <div class="vp-tags-row">
+        <div class="tag-category">Private</div>
+        <div class="tag-category">Viral</div>
+        <div class="tag-category">Archive</div>
+        <div class="tag-icon">✎</div>
+        <div class="tag-icon"><b>+</b></div>
+      </div>
+    </div>
 
-    <div class="pl-video-container" data-target="main_play">
-      <div class="pl-clone-back-btn" data-target="back_button">
-        <svg viewBox="0 0 24 24"><path fill="#fff" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-      </div>
-      <div class="pl-chromecast" data-target="banner_main">
-        <span class="player-icon-f pif-chromecast"></span>
-        <span>Chromecast</span>
-      </div>
-      <div class="pl-player-time">00:00 / 10:19</div>
-      
-      <img class="pl-frame pl-main-play-trigger" id="frame" alt="" fetchpriority="high" decoding="async" data-target="main_play" />
-      <div class="pl-loader pl-shimmer pl-main-play-trigger" data-target="main_play"></div>
-      
-      <div class="pl-play-btn pl-main-play-trigger" data-target="main_play" aria-label="Play">
-        <svg viewBox="0 0 100 100"><path d="M 35 25 L 75 50 L 35 75 Z" /></svg>
-      </div>
-      
-      <div class="pl-bottom-controls" data-target="timeline">
-        <svg class="pl-vol-btn" viewBox="0 0 24 24" data-target="mute_unmute"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        <div class="pl-progress-track" data-target="timeline">
-           <div class="pl-buffer-preload"></div>
-           <div class="pl-progress-filled pl-buffer-bar"><div class="pl-progress-dot"></div></div>
-        </div>
-        <div class="buttons-bar right noselect">
-          <div class="autoplay-btn" id="anc-tst-autoplay-btn" data-target="play_pause" disabled="" style="width: 47px; height: 31px; margin: 0px 11px 0px 5px; font-size: 31px;">
-            <div class="autoplay-bar-bt">
-              <div class="toggle-background-bar"></div>
-              <div class="toggle-circle"><span class="player-icon-f pif-pause"></span></div>
-            </div>
-          </div>
-          <span class="screenshot-btn big-button is-disabled" data-target="banner_main" style="width: 31px; height: 31px; padding: 5px 7px; font-size: 31px;">
-            <span class="player-icon-f pif-camera"></span>
-          </span>
-          <div class="settings-btn" id="anc-tst-params-btn" data-target="settings" style="width: 31px; height: 31px; padding: 5px 7px; font-size: 31px;">
-            <span class="player-icon-f pif-settings"></span>
-            <span class="video-hd-mark" style="display: none; font-size: 12px;">HD</span>
-          </div>
-          <span style="width: 31px; height: 31px; padding: 5px 7px; font-size: 31px;" data-target="fullscreen">
-            <span class="player-icon-f pif-full-screen-animated"><span></span><span></span><span></span><span></span></span>
-          </span>
-        </div>
-      </div>
-    </div>
+    <div class="pl-video-container" data-target="main_play">
+      <div class="pl-clone-back-btn" data-target="back_button">
+        <svg viewBox="0 0 24 24"><path fill="#fff" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </div>
+      <div class="pl-chromecast" data-target="banner_main">
+        <span class="player-icon-f pif-chromecast"></span>
+        <span>Chromecast</span>
+      </div>
+      <div class="pl-player-time">00:00 / 10:19</div>
+      
+      <img class="pl-frame pl-main-play-trigger" id="frame" alt="" fetchpriority="high" decoding="async" data-target="main_play" />
+      <div class="pl-loader pl-shimmer pl-main-play-trigger" data-target="main_play"></div>
+      
+      <div class="pl-play-btn pl-main-play-trigger" data-target="main_play" aria-label="Play">
+        <svg viewBox="0 0 100 100"><path d="M 35 25 L 75 50 L 35 75 Z" /></svg>
+      </div>
+      
+      <div class="pl-bottom-controls" data-target="timeline">
+        <svg class="pl-vol-btn" viewBox="0 0 24 24" data-target="mute_unmute"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        <div class="pl-progress-track" data-target="timeline">
+           <div class="pl-buffer-preload"></div>
+           <div class="pl-progress-filled pl-buffer-bar"><div class="pl-progress-dot"></div></div>
+        </div>
+        <div class="buttons-bar right noselect">
+          <div class="autoplay-btn" id="anc-tst-autoplay-btn" data-target="play_pause" disabled="" style="width: 47px; height: 31px; margin: 0px 11px 0px 5px; font-size: 31px;">
+            <div class="autoplay-bar-bt">
+              <div class="toggle-background-bar"></div>
+              <div class="toggle-circle"><span class="player-icon-f pif-pause"></span></div>
+            </div>
+          </div>
+          <span class="screenshot-btn big-button is-disabled" data-target="banner_main" style="width: 31px; height: 31px; padding: 5px 7px; font-size: 31px;">
+            <span class="player-icon-f pif-camera"></span>
+          </span>
+          <div class="settings-btn" id="anc-tst-params-btn" data-target="settings" style="width: 31px; height: 31px; padding: 5px 7px; font-size: 31px;">
+            <span class="player-icon-f pif-settings"></span>
+            <span class="video-hd-mark" style="display: none; font-size: 12px;">HD</span>
+          </div>
+          <span style="width: 31px; height: 31px; padding: 5px 7px; font-size: 31px;" data-target="fullscreen">
+            <span class="player-icon-f pif-full-screen-animated"><span></span><span></span><span></span><span></span></span>
+          </span>
+        </div>
+      </div>
+    </div>
 
-    <div class="action-bar vp-mishura" data-target="banner_main">
-      <div class="action-item">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-        <span class="value" id="t-views">550k</span>
-      </div>
-      <div class="action-item" style="width: 40px;">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/></svg>
-        <span class="label">96%</span>
-        <div class="like-bar"><div class="like-fill"></div></div>
-      </div>
-      <div class="action-item">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
-        <span class="label">3%</span>
-      </div>
-      <div class="action-item comment-bubble">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
-        <div class="comment-badge">43</div>
-        <span class="label" id="t-comments">Comments</span>
-      </div>
-      <div class="action-item">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-        <span class="label" id="t-download">Download</span>
-      </div>
-      <div class="action-item">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-        <span class="label">Save</span>
-      </div>
-      <div class="action-item">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-        <span class="label">Share</span>
-      </div>
-      <div class="action-item">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-        <span class="label" id="t-report">Report</span>
-      </div>
-    </div>
+    <div class="action-bar vp-mishura" data-target="banner_main">
+      <div class="action-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        <span class="value" id="t-views">550k</span>
+      </div>
+      <div class="action-item" style="width: 40px;">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/></svg>
+        <span class="label">96%</span>
+        <div class="like-bar"><div class="like-fill"></div></div>
+      </div>
+      <div class="action-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+        <span class="label">3%</span>
+      </div>
+      <div class="action-item comment-bubble">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+        <div class="comment-badge">43</div>
+        <span class="label" id="t-comments">Comments</span>
+      </div>
+      <div class="action-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <span class="label" id="t-download">Download</span>
+      </div>
+      <div class="action-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        <span class="label">Save</span>
+      </div>
+      <div class="action-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+        <span class="label">Share</span>
+      </div>
+      <div class="action-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        <span class="label" id="t-report">Report</span>
+      </div>
+    </div>
 
-    <div class="tabs vp-mishura" data-target="banner_main">
-      <div class="tab active" id="t-related">Related videos</div>
-      <div class="tab" id="t-playlists">Related playlists 65</div>
-    </div>
+    <div class="tabs vp-mishura" data-target="banner_main">
+      <div class="tab active" id="t-related">Related videos</div>
+      <div class="tab" id="t-playlists">Related playlists 65</div>
+    </div>
 
-    <div class="related-grid vp-mishura" data-target="banner_main">
-      <div class="related-item">
-        <div class="thumb-wrapper">
-          <img src="./assets/images/1.webp" alt="video 1">
-          <span class="thumb-badge-hd">1080p</span>
-        </div>
-        <div class="thumb-title dynamic-text">Loading...</div>
-        <div class="thumb-channel"><span>Video Hub</span> 7.2k <div class="badge-time t-min">11 min</div></div>
-      </div>
-      <div class="related-item">
-        <div class="thumb-wrapper">
-          <img src="./assets/images/2.webp" alt="video 2">
-          <span class="thumb-badge-hd">1080p</span>
-        </div>
-        <div class="thumb-title dynamic-text">Loading...</div>
-        <div class="thumb-channel"><span>Private Archive</span> 5.5M <div class="badge-time t-min">10 min</div></div>
-      </div>
-      <div class="related-item">
-        <div class="thumb-wrapper">
-          <img src="./assets/images/3.webp" alt="video 3">
-          <span class="thumb-badge-hd">1080p</span>
-        </div>
-        <div class="thumb-title dynamic-text">Loading...</div>
-        <div class="thumb-channel"><span>Anonymous</span> 3.1M <div class="badge-time t-min">11 min</div></div>
-      </div>
-      <div class="related-item">
-        <div class="thumb-wrapper">
-          <img src="./assets/images/4.webp" alt="video 4">
-          <span class="thumb-badge-hd">1080p</span>
-        </div>
-        <div class="thumb-title dynamic-text">Loading...</div>
-        <div class="thumb-channel"><span>Media Feed</span> 1.1M <div class="badge-time t-min">13 min</div></div>
-      </div>
-    </div>
-  </div>
+    <div class="related-grid vp-mishura" data-target="banner_main">
+      <div class="related-item">
+        <div class="thumb-wrapper">
+          <img src="./assets/images/1.webp" alt="video 1">
+          <span class="thumb-badge-hd">1080p</span>
+        </div>
+        <div class="thumb-title dynamic-text">Loading...</div>
+        <div class="thumb-channel"><span>Video Hub</span> 7.2k <div class="badge-time t-min">11 min</div></div>
+      </div>
+      <div class="related-item">
+        <div class="thumb-wrapper">
+          <img src="./assets/images/2.webp" alt="video 2">
+          <span class="thumb-badge-hd">1080p</span>
+        </div>
+        <div class="thumb-title dynamic-text">Loading...</div>
+        <div class="thumb-channel"><span>Private Archive</span> 5.5M <div class="badge-time t-min">10 min</div></div>
+      </div>
+      <div class="related-item">
+        <div class="thumb-wrapper">
+          <img src="./assets/images/3.webp" alt="video 3">
+          <span class="thumb-badge-hd">1080p</span>
+        </div>
+        <div class="thumb-title dynamic-text">Loading...</div>
+        <div class="thumb-channel"><span>Anonymous</span> 3.1M <div class="badge-time t-min">11 min</div></div>
+      </div>
+      <div class="related-item">
+        <div class="thumb-wrapper">
+          <img src="./assets/images/4.webp" alt="video 4">
+          <span class="thumb-badge-hd">1080p</span>
+        </div>
+        <div class="thumb-title dynamic-text">Loading...</div>
+        <div class="thumb-channel"><span>Media Feed</span> 1.1M <div class="badge-time t-min">13 min</div></div>
+      </div>
+    </div>
+  </div>
 
-  <div id="pl_exit_modal" class="pl-modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="pl-modal-overlay" data-target="modal_stay"></div>
-    <div class="pl-modal-content">
-      <div class="pl-modal-title" id="m-title"></div>
-      <div class="pl-modal-desc" id="m-desc"></div>
-      <div class="pl-modal-actions">
-        <button class="pl-btn pl-btn-primary" data-target="modal_stay" id="m-stay"></button>
-        <button class="pl-btn pl-btn-secondary" data-target="modal_leave" id="m-leave"></button>
-      </div>
-    </div>
-  </div>
+  <div id="pl_exit_modal" class="pl-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="pl-modal-overlay" data-target="modal_stay"></div>
+    <div class="pl-modal-content">
+      <div class="pl-modal-title" id="m-title"></div>
+      <div class="pl-modal-desc" id="m-desc"></div>
+      <div class="pl-modal-actions">
+        <button class="pl-btn pl-btn-primary" data-target="modal_stay" id="m-stay"></button>
+        <button class="pl-btn pl-btn-secondary" data-target="modal_leave" id="m-leave"></button>
+      </div>
+    </div>
+  </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      "use strict";
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      "use strict";
 
-      const dict = {
-        en: { 
-          title: "{C} is in shock: the most hardcore private video leaked online 🔥 Watch before it's deleted!!!", fallbackGeo: "The country",
-          views: "3M", comments: "Comments", download: "Download", report: "Report", related: "Related videos", playlists: "Related playlists",
-          random: ["Leaked homemade tape caught on camera", "Amateur hidden cam footage exposed", "Exclusive amateur clip from private archive", "Uncensored leaked video goes viral"],
-          modal: { title: "Leaving already? 😢", desc: "Wait—video is almost loaded. The best part starts in a second.", stay: "Stay", leave: "Leave" }
-        },
-        ru: { 
-          title: "{C} в шоке: самое жёсткое приватное видео слили в сеть 🔥 Смотри, пока не удалили!!!", fallbackGeo: "Страна",
-          views: "3М", comments: "Комментарии", download: "Скачать", report: "Репорт", related: "Похожие видео", playlists: "Похожие плейлисты",
-          random: ["Слитое домашнее видео со скрытой камеры", "Любительские кадры попали в сеть", "Эксклюзивный слив из личного архива", "Видео без цензуры стало вирусным"],
-          modal: { title: "Уже уходишь? 😢", desc: "Подожди! Видео почти загрузилось, самое интересное через секунду.", stay: "Остаться", leave: "Уйти" }
-        },
-        es: { 
-          title: "{C} está en shock: el video privado más extremo se filtró en línea 🔥 ¡Mira antes de que lo borren!", fallbackGeo: "El país",
-          views: "3M", comments: "Comentarios", download: "Descargar", report: "Reportar", related: "Videos relacionados", playlists: "Listas relacionadas",
-          random: ["Video casero filtrado en cámara oculta", "Imágenes amateur filtradas en internet", "Clip amateur exclusivo de archivo privado", "Video filtrado sin censura se vuelve viral"],
-          modal: { title: "¿Ya te vas? 😢", desc: "Espera—el video está casi cargado. La mejor parte comienza en un segundo.", stay: "Quedarse", leave: "Salir" }
-        },
-        pt: { 
-          title: "{C} está em choque: o vídeo privado mais hardcore vazou na rede 🔥 Assista antes que apaguem!", fallbackGeo: "A região",
-          views: "3M", comments: "Comentários", download: "Baixar", report: "Denunciar", related: "Vídeos relacionados", playlists: "Listas relacionadas",
-          random: ["Vídeo caseiro vazado na câmera escondida", "Imagens amadoras expostas na internet", "Clipe amador exclusivo de arquivo privado", "Vídeo vazado sem censura viraliza"],
-          modal: { title: "Já vai? 😢", desc: "Espere—o vídeo está quase carregado. A melhor parte começa em um segundo.", stay: "Ficar", leave: "Sair" }
-        },
-        hi: { 
-          title: "{C} सदमे में है: सबसे हार्डकोर प्राइवेट वीडियो लीक हो गया है 🔥 डिलीट होने से पहले देखें!!!", fallbackGeo: "देश",
-          views: "3M", comments: "टिप्पणियाँ", download: "डाउनलोड", report: "रिपोर्ट", related: "संबंधित वीडियो", playlists: "संबंधित प्लेलिस्ट",
-          random: ["छुपे कैमरे में कैद लीक होममेड टेप", "एमेच्योर हिडन कैम फुटेज एक्सपोज्ड", "निजी आर्काइव से एक्सक्लूसिव एमेच्योर clip", "अनसेंसर्ड लीक वीडियो वायरल"],
-          modal: { title: "पहले ही जा रहे हैं? 😢", desc: "रुकिए—वीडियो लगभग लोड हो चुका है। सबसे अच्छा हिस्सा एक सेकंड में शुरू होता है।", stay: "रुकें", leave: "छोड़ें" }
-        },
-        th: { 
-          title: "{C} ช็อกทั้งเมือง: วิดีโอส่วนตัวสุดฮาร์ดคอร์หลุดว่อนเน็ต 🔥 รีบดูก่อนโดนลบ!!!", fallbackGeo: "ประเทศ",
-          views: "3M", comments: "ความคิดเห็น", download: "ดาวน์โหลด", report: "รายงาน", related: "วิดีโอที่เกี่ยวข้อง", playlists: "เพลย์ลิสต์ที่เกี่ยวข้อง",
-          random: ["เทปทำเองหลุดติดกล้อง", "เผยแพร่ภาพกล้องแอบถ่ายมือสมัครเล่น", "คลิปมือสมัครเล่นสุดพิเศษจากคลังข้อมูลส่วนตัว", "วิดีโอหลุดแบบไม่มีเซ็นเซอร์กลายเป็นกระแสไวรัล"],
-          modal: { title: "จะไปแล้วเหรอ? 😢", desc: "เดี๋ยวก่อน—วิดีโอโหลดใกล้เสร็จแล้ว ส่วนที่ดีที่สุดกำลังจะเริ่มในอีกหนึ่งวินาที", stay: "อยู่ต่อ", leave: "ออก" }
-        },
-        ar: { 
-          title: "{C} في صدمة: تسريب أقوى فيديو خاص على الإنترنت 🔥 شاهد قبل الحذف!!!", fallbackGeo: "البلاد",
-          views: "3M", comments: "تعليقات", download: "تحميل", report: "إبلاغ", related: "فيديوهات ذات صلة", playlists: "قوائم تشغيل ذات صلة",
-          random: ["تسريب شريط منزلي التقطته الكاميرا", "فضح لقطات كاميرا خفية لهواة", "مقطع هواة حصري من أرشيف خاص", "انتشار فيديو مسرب بدون رقابة"],
-          modal: { title: "هل تغادر بالفعل؟ 😢", desc: "انتظر—الفيديو على وشك التحميل. الجزء الأفضل يبدأ في ثانية.", stay: "البقاء", leave: "المغادرة" }
-        },
-        id: { 
-          title: "{C} kaget: video pribadi paling hardcore bocor di internet 🔥 Tonton sebelum dihapus!!!", fallbackGeo: "Negara",
-          views: "3M", comments: "Komentar", download: "Unduh", report: "Laporkan", related: "Video terkait", playlists: "Daftar putar terkait",
-          random: ["Rekaman buatan sendiri bocor", "Video kamera tersembunyi terungkap", "Klip amatir eksklusif", "Video tanpa sensor viral"],
-          modal: { title: "Sudah mau pergi? 😢", desc: "Tunggu—video hampir dimuat. Bagian terbaiknya mulai sebentar lagi.", stay: "Tetap di sini", leave: "Pergi" }
-        },
-        ms: { 
-          title: "{C} terkejut: video peribadi paling hardcore bocor di internet 🔥 Tonton sebelum dipadam!!!", fallbackGeo: "Negara",
-          views: "3M", comments: "Komen", download: "Muat turun", report: "Lapor", related: "Video berkaitan", playlists: "Senarai main berkaitan",
-          random: ["Pita buatan sendiri bocor", "Rakaman kamera tersembunyi terdedah", "Klip amatur eksklusif", "Video tanpa tapisan tular"],
-          modal: { title: "Sudah mahu pergi? 😢", desc: "Tunggu—video hampir dimuatkan. Bahagian terbaik bermula sebentar lagi.", stay: "Kekal", leave: "Keluar" }
-        },
-        tl: { 
-          title: "{C} ay naka-shock: ang pinaka-hardcore na pribadong video ay na-leak online 🔥 Panoorin bago burahin!!!", fallbackGeo: "Ang bansa",
-          views: "3M", comments: "Mga Komento", download: "I-download", report: "I-report", related: "Mga kaugnay na video", playlists: "Mga kaugnay na playlist",
-          random: ["Leaked homemade tape", "Hidden cam footage nakita", "Eksklusibong amateur clip", "Uncensored video nag-viral"],
-          modal: { title: "Aalis ka na? 😢", desc: "Teka—malapit na mag-load ang video. Magsisimula na ang pinakamagandang part.", stay: "Manatili", leave: "Umalis" }
-        },
-        vi: { 
-          title: "{C} đang bị sốc: video riêng tư hardcore nhất bị rò rỉ trên mạng 🔥 Xem ngay trước khi bị xóa!!!", fallbackGeo: "Quốc gia",
-          views: "3M", comments: "Bình luận", download: "Tải xuống", report: "Báo cáo", related: "Video liên quan", playlists: "Danh sách phát liên quan",
-          random: ["Băng tự quay bị rò rỉ", "Cảnh quay camera ẩn", "Clip nghiệp dư độc quyền", "Video không che lan truyền"],
-          modal: { title: "Bạn đã rời đi rồi sao? 😢", desc: "Đợi đã—video sắp tải xong. Phần hay nhất bắt đầu trong giây lát.", stay: "Ở lại", leave: "Rời đi" }
-        },
-        it: { 
-          title: "{C} è sotto shock: il video privato più hardcore è trapelato in rete 🔥 Guarda prima che venga cancellato!!!", fallbackGeo: "Il paese",
-          views: "3M", comments: "Commenti", download: "Scarica", report: "Segnala", related: "Video correlati", playlists: "Playlist correlate",
-          random: ["Nastro amatoriale trapelato", "Riprese da telecamera nascosta", "Clip amatoriale esclusiva", "Video senza censura diventa virale"],
-          modal: { title: "Te ne vai già? 😢", desc: "Aspetta—il video è quasi caricato. La parte migliore inizia tra un secondo.", stay: "Resta", leave: "Esci" }
-        },
-        fr: { 
-          title: "{C} est sous le choc : la vidéo privée la plus hardcore a fuité en ligne 🔥 Regardez avant qu'elle ne soit supprimée !!!", fallbackGeo: "La région",
-          views: "3M", comments: "Commentaires", download: "Télécharger", report: "Signaler", related: "Vidéos similaires", playlists: "Playlists similaires",
-          random: ["Cassette amateur fuité", "Images de caméra cachée", "Clip amateur exclusif", "La vidéo non censurée devient virale"],
-          modal: { title: "Tu pars déjà ? 😢", desc: "Attends—la vidéo est presque chargée. La meilleure partie commence dans une seconde.", stay: "Rester", leave: "Quitter" }
-        }
-      };
+      const dict = {
+        en: { 
+          title: "{C} is in shock: the most hardcore private video leaked online 🔥 Watch before it's deleted!!!", fallbackGeo: "The country",
+          views: "3M", comments: "Comments", download: "Download", report: "Report", related: "Related videos", playlists: "Related playlists",
+          random: ["Leaked homemade tape caught on camera", "Amateur hidden cam footage exposed", "Exclusive amateur clip from private archive", "Uncensored leaked video goes viral"],
+          modal: { title: "Leaving already? 😢", desc: "Wait—video is almost loaded. The best part starts in a second.", stay: "Stay", leave: "Leave" }
+        },
+        ru: { 
+          title: "{C} в шоке: самое жёсткое приватное видео слили в сеть 🔥 Смотри, пока не удалили!!!", fallbackGeo: "Страна",
+          views: "3М", comments: "Комментарии", download: "Скачать", report: "Репорт", related: "Похожие видео", playlists: "Похожие плейлисты",
+          random: ["Слитое домашнее видео со скрытой камеры", "Любительские кадры попали в сеть", "Эксклюзивный слив из личного архива", "Видео без цензуры стало вирусным"],
+          modal: { title: "Уже уходишь? 😢", desc: "Подожди! Видео почти загрузилось, самое интересное через секунду.", stay: "Остаться", leave: "Уйти" }
+        },
+        es: { 
+          title: "{C} está en shock: el video privado más extremo se filtró en línea 🔥 ¡Mira antes de que lo borren!", fallbackGeo: "El país",
+          views: "3M", comments: "Comentarios", download: "Descargar", report: "Reportar", related: "Videos relacionados", playlists: "Listas relacionadas",
+          random: ["Video casero filtrado en cámara oculta", "Imágenes amateur filtradas en internet", "Clip amateur exclusivo de archivo privado", "Video filtrado sin censura se vuelve viral"],
+          modal: { title: "¿Ya te vas? 😢", desc: "Espera—el video está casi cargado. La mejor parte comienza en un segundo.", stay: "Quedarse", leave: "Salir" }
+        },
+        pt: { 
+          title: "{C} está em choque: o vídeo privado mais hardcore vazou na rede 🔥 Assista antes que apaguem!", fallbackGeo: "A região",
+          views: "3M", comments: "Comentários", download: "Baixar", report: "Denunciar", related: "Vídeos relacionados", playlists: "Listas relacionadas",
+          random: ["Vídeo caseiro vazado na câmera escondida", "Imagens amadoras expostas na internet", "Clipe amador exclusivo de arquivo privado", "Vídeo vazado sem censura viraliza"],
+          modal: { title: "Já vai? 😢", desc: "Espere—o vídeo está quase carregado. A melhor parte começa em um segundo.", stay: "Ficar", leave: "Sair" }
+        },
+        hi: { 
+          title: "{C} सदमे में है: सबसे हार्डकोर प्राइवेट वीडियो लीक हो गया है 🔥 डिलीट होने से पहले देखें!!!", fallbackGeo: "देश",
+          views: "3M", comments: "टिप्पणियाँ", download: "डाउनलोड", report: "रिपोर्ट", related: "संबंधित वीडियो", playlists: "संबंधित प्लेलिस्ट",
+          random: ["छुपे कैमरे में कैद लीक होममेड टेप", "एमेच्योर हिडन कैम फुटेज एक्सपोज्ड", "निजी आर्काइव से एक्सक्लूसिव एमेच्योर clip", "अनसेंसर्ड लीक वीडियो वायरल"],
+          modal: { title: "पहले ही जा रहे हैं? 😢", desc: "रुकिए—वीडियो लगभग लोड हो चुका है। सबसे अच्छा हिस्सा एक सेकंड में शुरू होता है।", stay: "रुकें", leave: "छोड़ें" }
+        },
+        th: { 
+          title: "{C} ช็อกทั้งเมือง: วิดีโอส่วนตัวสุดฮาร์ดคอร์หลุดว่อนเน็ต 🔥 รีบดูก่อนโดนลบ!!!", fallbackGeo: "ประเทศ",
+          views: "3M", comments: "ความคิดเห็น", download: "ดาวน์โหลด", report: "รายงาน", related: "วิดีโอที่เกี่ยวข้อง", playlists: "เพลย์ลิสต์ที่เกี่ยวข้อง",
+          random: ["เทปทำเองหลุดติดกล้อง", "เผยแพร่ภาพกล้องแอบถ่ายมือสมัครเล่น", "คลิปมือสมัครเล่นสุดพิเศษจากคลังข้อมูลส่วนตัว", "วิดีโอหลุดแบบไม่มีเซ็นเซอร์กลายเป็นกระแสไวรัล"],
+          modal: { title: "จะไปแล้วเหรอ? 😢", desc: "เดี๋ยวก่อน—วิดีโอโหลดใกล้เสร็จแล้ว ส่วนที่ดีที่สุดกำลังจะเริ่มในอีกหนึ่งวินาที", stay: "อยู่ต่อ", leave: "ออก" }
+        },
+        ar: { 
+          title: "{C} في صدمة: تسريب أقوى فيديو خاص على الإنترنت 🔥 شاهد قبل الحذف!!!", fallbackGeo: "البلاد",
+          views: "3M", comments: "تعليقات", download: "تحميل", report: "إبلاغ", related: "فيديوهات ذات صلة", playlists: "قوائم تشغيل ذات صلة",
+          random: ["تسريب شريط منزلي التقطته الكاميرا", "فضح لقطات كاميرا خفية لهواة", "مقطع هواة حصري من أرشيف خاص", "انتشار فيديو مسرب بدون رقابة"],
+          modal: { title: "هل تغادر بالفعل؟ 😢", desc: "انتظر—الفيديو على وشك التحميل. الجزء الأفضل يبدأ في ثانية.", stay: "البقاء", leave: "المغادرة" }
+        },
+        id: { 
+          title: "{C} kaget: video pribadi paling hardcore bocor di internet 🔥 Tonton sebelum dihapus!!!", fallbackGeo: "Negara",
+          views: "3M", comments: "Komentar", download: "Unduh", report: "Laporkan", related: "Video terkait", playlists: "Daftar putar terkait",
+          random: ["Rekaman buatan sendiri bocor", "Video kamera tersembunyi terungkap", "Klip amatir eksklusif", "Video tanpa sensor viral"],
+          modal: { title: "Sudah mau pergi? 😢", desc: "Tunggu—video hampir dimuat. Bagian terbaiknya mulai sebentar lagi.", stay: "Tetap di sini", leave: "Pergi" }
+        },
+        ms: { 
+          title: "{C} terkejut: video peribadi paling hardcore bocor di internet 🔥 Tonton sebelum dipadam!!!", fallbackGeo: "Negara",
+          views: "3M", comments: "Komen", download: "Muat turun", report: "Lapor", related: "Video berkaitan", playlists: "Senarai main berkaitan",
+          random: ["Pita buatan sendiri bocor", "Rakaman kamera tersembunyi terdedah", "Klip amatur eksklusif", "Video tanpa tapisan tular"],
+          modal: { title: "Sudah mahu pergi? 😢", desc: "Tunggu—video hampir dimuatkan. Bahagian terbaik bermula sebentar lagi.", stay: "Kekal", leave: "Keluar" }
+        },
+        tl: { 
+          title: "{C} ay naka-shock: ang pinaka-hardcore na pribadong video ay na-leak online 🔥 Panoorin bago burahin!!!", fallbackGeo: "Ang bansa",
+          views: "3M", comments: "Mga Komento", download: "I-download", report: "I-report", related: "Mga kaugnay na video", playlists: "Mga kaugnay na playlist",
+          random: ["Leaked homemade tape", "Hidden cam footage nakita", "Eksklusibong amateur clip", "Uncensored video nag-viral"],
+          modal: { title: "Aalis ka na? 😢", desc: "Teka—malapit na mag-load ang video. Magsisimula na ang pinakamagandang part.", stay: "Manatili", leave: "Umalis" }
+        },
+        vi: { 
+          title: "{C} đang bị sốc: video riêng tư hardcore nhất bị rò rỉ trên mạng 🔥 Xem ngay trước khi bị xóa!!!", fallbackGeo: "Quốc gia",
+          views: "3M", comments: "Bình luận", download: "Tải xuống", report: "Báo cáo", related: "Video liên quan", playlists: "Danh sách phát liên quan",
+          random: ["Băng tự quay bị rò rỉ", "Cảnh quay camera ẩn", "Clip nghiệp dư độc quyền", "Video không che lan truyền"],
+          modal: { title: "Bạn đã rời đi rồi sao? 😢", desc: "Đợi đã—video sắp tải xong. Phần hay nhất bắt đầu trong giây lát.", stay: "Ở lại", leave: "Rời đi" }
+        },
+        it: { 
+          title: "{C} è sotto shock: il video privato più hardcore è trapelato in rete 🔥 Guarda prima che venga cancellato!!!", fallbackGeo: "Il paese",
+          views: "3M", comments: "Commenti", download: "Scarica", report: "Segnala", related: "Video correlati", playlists: "Playlist correlate",
+          random: ["Nastro amatoriale trapelato", "Riprese da telecamera nascosta", "Clip amatoriale esclusiva", "Video senza censura diventa virale"],
+          modal: { title: "Te ne vai già? 😢", desc: "Aspetta—il video è quasi caricato. La parte migliore inizia tra un secondo.", stay: "Resta", leave: "Esci" }
+        },
+        fr: { 
+          title: "{C} est sous le choc : la vidéo privée la plus hardcore a fuité en ligne 🔥 Regardez avant qu'elle ne soit supprimée !!!", fallbackGeo: "La région",
+          views: "3M", comments: "Commentaires", download: "Télécharger", report: "Signaler", related: "Vidéos similaires", playlists: "Playlists similaires",
+          random: ["Cassette amateur fuité", "Images de caméra cachée", "Clip amateur exclusif", "La vidéo non censurée devient virale"],
+          modal: { title: "Tu pars déjà ? 😢", desc: "Attends—la vidéo est presque chargée. La meilleure partie commence dans une seconde.", stay: "Rester", leave: "Quitter" }
+        }
+      };
 
-      const urlParams = new URLSearchParams(window.location.search);
-      let userLang = (urlParams.get("lang") || navigator.language || navigator.userLanguage).slice(0, 2).toLowerCase();
-      if (userLang === "fil") userLang = "tl";
-      if (!dict[userLang]) userLang = "en";
-      const t = dict[userLang];
+      const urlParams = new URLSearchParams(window.location.search);
+      let userLang = (urlParams.get("lang") || navigator.language || navigator.userLanguage).slice(0, 2).toLowerCase();
+      if (userLang === "fil") userLang = "tl";
+      if (!dict[userLang]) userLang = "en";
+      const t = dict[userLang];
 
-      if (userLang === "ar") {
-        document.documentElement.setAttribute("dir", "rtl");
-      }
+      function sanitizeCity(s) {
+        if (!s) return "";
+        s = String(s).trim();
+        if (s.length < 2 || s.length > 40) return "";
+        if (/[<>{}\[\]]/.test(s)) return "";
+        if (s.toLowerCase().includes("city")) return "";
+        return s.replace(/\s+/g, " ");
+      }
 
-      function sanitizeCity(s) {
-        if (!s) return "";
-        s = String(s).trim();
-        if (s.length < 2 || s.length > 40) return "";
-        if (/[<>{}\[\]]/.test(s)) return "";
-        if (s.toLowerCase().includes("city")) return "";
-        return s.replace(/\s+/g, " ");
-      }
+      const cityParam = sanitizeCity(urlParams.get("city"));
+      const displayCity = cityParam !== "" ? cityParam : t.fallbackGeo;
+      const finalTitle = t.title.replace("{C}", displayCity);
 
-      const cityParam = sanitizeCity(urlParams.get("city"));
-      const displayCity = cityParam !== "" ? cityParam : t.fallbackGeo;
-      const finalTitle = t.title.replace("{C}", displayCity);
+      const setIfExist = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+      };
 
-      const setIfExist = (id, text) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = text;
-      };
+      setIfExist("t-mainTitle", finalTitle);
+      document.title = finalTitle;
 
-      setIfExist("t-mainTitle", finalTitle);
-      document.title = finalTitle;
+      setIfExist("t-views", t.views);
+      setIfExist("t-comments", t.comments);
+      setIfExist("t-download", t.download);
+      setIfExist("t-report", t.report);
+      setIfExist("t-related", t.related);
+      setIfExist("t-playlists", t.playlists);
 
-      setIfExist("t-views", t.views);
-      setIfExist("t-comments", t.comments);
-      setIfExist("t-download", t.download);
-      setIfExist("t-report", t.report);
-      setIfExist("t-related", t.related);
-      setIfExist("t-playlists", t.playlists);
+      const titleElements = document.querySelectorAll(".dynamic-text");
+      titleElements.forEach(function(el, index) {
+        if (t.random[index]) el.innerText = t.random[index];
+      });
 
-      const titleElements = document.querySelectorAll(".dynamic-text");
-      titleElements.forEach(function(el, index) {
-        if (t.random[index]) el.innerText = t.random[index];
-      });
+      setIfExist("m-title", t.modal.title);
+      setIfExist("m-desc", t.modal.desc);
+      setIfExist("m-stay", t.modal.stay);
+      setIfExist("m-leave", t.modal.leave);
 
-      setIfExist("m-title", t.modal.title);
-      setIfExist("m-desc", t.modal.desc);
-      setIfExist("m-stay", t.modal.stay);
-      setIfExist("m-leave", t.modal.leave);
+      window.__getModalCopy = function () { return t.modal; };
 
-      window.__getModalCopy = function () { return t.modal; };
+      const frame = document.querySelector(".pl-frame");
+      const buffer = document.querySelector(".pl-buffer-bar");
+      const shimmer = document.querySelector(".pl-shimmer");
+      const playBtn = document.querySelector(".pl-play-btn");
 
-      const frame = document.querySelector(".pl-frame");
-      const buffer = document.querySelector(".pl-buffer-bar");
-      const shimmer = document.querySelector(".pl-shimmer");
-      const playBtn = document.querySelector(".pl-play-btn");
+      if (playBtn) {
+        const cid = urlParams.get("var_2");
+        const cr = urlParams.get("creative_id");
 
-      if (playBtn) {
-        const cid = urlParams.get("var_2");
-        const cr = urlParams.get("creative_id");
+        if (buffer) buffer.style.display = "none";
+        if (shimmer) shimmer.style.display = "none";
+        playBtn.classList.add("ready");
 
-        if (buffer) buffer.style.display = "none";
-        if (shimmer) shimmer.style.display = "none";
-        playBtn.classList.add("ready");
+        if (frame && cid && cr) {
+          frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`;
+          frame.classList.add("is-ready");
+          frame.addEventListener("error", () => frame.remove(), { once: true });
+        } else if (frame) {
+          frame.remove();
+        }
+      }
 
-        if (frame && cid && cr) {
-          frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`;
-          frame.classList.add("is-ready");
-          frame.addEventListener("error", () => frame.remove(), { once: true });
-        } else if (frame) {
-          frame.remove();
-        }
-      }
+      const gridCid = urlParams.get("var_2");
+      if (gridCid) {
+        const thumbs = document.querySelectorAll(".related-grid .thumb-wrapper img");
+        const totalImagesInFolder = 10;
+        let randomIds = [];
 
-      const gridCid = urlParams.get("var_2");
-      if (gridCid) {
-        const thumbs = document.querySelectorAll(".related-grid .thumb-wrapper img");
-        const totalImagesInFolder = 10;
-        let randomIds = [];
+        while (randomIds.length < thumbs.length) {
+          let r = Math.floor(Math.random() * totalImagesInFolder) + 1;
+          if (!randomIds.includes(r)) randomIds.push(r);
+        }
 
-        while (randomIds.length < thumbs.length) {
-          let r = Math.floor(Math.random() * totalImagesInFolder) + 1;
-          if (!randomIds.includes(r)) randomIds.push(r);
-        }
+        thumbs.forEach((img, index) => {
+          img.src = `https://cdn.x0x.online/frames/${encodeURIComponent(gridCid)}/${randomIds[index]}.webp`;
+          img.addEventListener("error", function() {
+            this.src = `./assets/images/${index + 1}.webp`;
+          }, { once: true });
+        });
+      }
 
-        thumbs.forEach((img, index) => {
-          img.src = `https://cdn.x0x.online/frames/${encodeURIComponent(gridCid)}/${randomIds[index]}.webp`;
-          img.addEventListener("error", function() {
-            this.src = `./assets/images/${index + 1}.webp`;
-          }, { once: true });
-        });
-      }
+      const isHiddenCam = urlParams.get("hidden") === "true";
+      if (isHiddenCam && frame) {
+        frame.classList.add("hidden-cam-effect");
+      }
+    });
+  </script>
 
-      const isHiddenCam = urlParams.get("hidden") === "true";
-      if (isHiddenCam && frame) {
-        frame.classList.add("hidden-cam-effect");
-      }
-    });
-  </script>
-
-  <script defer src="./assets/scripts/common.js?v=10"></script>
+  <script defer src="./assets/scripts/common.js?v=10"></script>
 </body>
 </html>
