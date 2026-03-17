@@ -387,83 +387,91 @@
     document.addEventListener("DOMContentLoaded", function() {
       "use strict";
 
+      const decTitle = (b64, fallback) => {
+        try {
+          return decodeURIComponent(atob(b64));
+        } catch (e) {
+          return fallback || "{C} Video Loading...";
+        }
+      };
+
       const dict = {
         en: { 
-          title: "{C} is in shock: the most hardcore private video leaked online 🔥 Watch before it's deleted!!!", fallbackGeo: "The country",
+          titleEnc: "JTdCQyU3RCUyMGlzJTIwaW4lMjBzaG9jayUzQSUyMHRoZSUyMG1vc3QlMjBoYXJkY29yZSUyMHByaXZhdGUlMjB2aWRlbyUyMGxlYWtlZCUyMG9ubGluZSUyMCVGMCU5RiU5NCVBNSUyMFdhdGNoJTIwYmVmb3JlJTIwaXQlMjdzJTIwZGVsZXRlZCEhIQ==", fallbackGeo: "The country",
           views: "3M", comments: "Comments", download: "Download", report: "Report", related: "Related videos", playlists: "Related playlists",
-          random: ["Leaked homemade tape caught on camera", "Amateur hidden cam footage exposed", "Exclusive amateur clip from private archive", "Uncensored leaked video goes viral"],
+          randomEnc: ["TGVha2VkJTIwaG9tZW1hZGUlMjB0YXBlJTIwY2F1Z2h0JTIwb24lMjBjYW1lcmE=", "QW1hdGV1ciUyMGhpZGRlbiUyMGNhbSUyMGZvb3RhZ2UlMjBleHBvc2Vk", "RXhjbHVzaXZlJTIwYW1hdGV1ciUyMGNsaXAlMjBmcm9tJTIwcHJpdmF0ZSUyMGFyY2hpdmU=", "VW5jZW5zb3JlZCUyMGxlYWtlZCUyMHZpZGVvJTIwZ29lcyUyMHZpcmFs"],
           modal: { title: "Leaving already? 😢", desc: "Wait—video is almost loaded. The best part starts in a second.", stay: "Stay", leave: "Leave" }
         },
         ru: { 
-          title: "{C} в шоке: самое жёсткое приватное видео слили в сеть 🔥 Смотри, пока не удалили!!!", fallbackGeo: "Страна",
+          titleEnc: "JTdCQyU3RCUyMCVEMCVCMiUyMCVEMSU4OCVEMCVCRSVEMCVCQSVEMCVCNSUzQSUyMCVEMSU4MSVEMCVCMCVEMCVCQyVEMCVCRSVEMCVCNSUyMCVEMCVCNiVEMSU5MSVEMSU4MSVEMSU4MiVEMCVCQSVEMCVCRSVEMCVCNSUyMCVEMCVCRiVEMSU4MCVEMCVCOCVEMCVCMiVEMCVCMCVEMSU4MiVEMCVCRCVEMCVCRSVEMCVCNSUyMCVEMCVCMiVEMCVCOCVEMCVCNCVEMCVCNSVEMCVCRSUyMCVEMSU4MSVEMCVCQiVEMCVCOCVEMCVCQiVEMCVCOCUyMCVEMCVCMiUyMCVEMSU4MSVEMCVCNSVEMSU4MiVEMSU4QyUyMCVGMCU5RiU5NCVBNSUyMCVEMCVBMSVEMCVCQyVEMCVCRSVEMSU4MiVEMSU4MCVEMCVCOCUyQyUyMCVEMCVCRiVEMCVCRSVEMCVCQSVEMCVCMCUyMCVEMCVCRCVEMCVCNSUyMCVEMSU4MyVEMCVCNCVEMCVCMCVEMCVCQiVEMCVCOCVEMCVCQiVEMCVCOCEhIQ==", fallbackGeo: "Страна",
           views: "3М", comments: "Комментарии", download: "Скачать", report: "Репорт", related: "Похожие видео", playlists: "Похожие плейлисты",
-          random: ["Слитое домашнее видео со скрытой камеры", "Любительские кадры попали в сеть", "Эксклюзивный слив из личного архива", "Видео без цензуры стало вирусным"],
+          randomEnc: ["JUQwJUExJUQwJUJCJUQwJUI4JUQxJTgyJUQwJUJFJUQwJUI1JTIwJUQwJUI0JUQwJUJFJUQwJUJDJUQwJUIwJUQxJTg4JUQwJUJEJUQwJUI1JUQwJUI1JTIwJUQwJUIyJUQwJUI4JUQwJUI0JUQwJUI1JUQwJUJFJTIwJUQxJTgxJUQwJUJFJTIwJUQxJTgxJUQwJUJBJUQxJTgwJUQxJThCJUQxJTgyJUQwJUJFJUQwJUI5JTIwJUQwJUJBJUQwJUIwJUQwJUJDJUQwJUI1JUQxJTgwJUQxJThC", "JUQwJThCJUQxJThFJUQwJUIxJUQwJUI4JUQxJTgyJUQwJUI1JUQwJUJCJUQxJThDJUQxJTgxJUQwJUJBJUQwJUI4JUQwJUI1JTIwJUQwJUJBJUQwJUIwJUQwJUI0JUQxJTgwJUQxJThCJTIwJUQwJUJGJUQwJUJFJUQwJUJGJUQwJUIwJUQwJUJCJUQwJUI4JTIwJUQwJUIyJTIwJUQxJTgxJUQwJUI1JUQxJTgyJUQxJThD", "JUQwJUFEJUQwJUJBJUQxJTgxJUQwJUJBJUQwJUJCJUQxJThFJUQwJUI3JUQwJUI4JUQwJUIyJUQwJUJEJUQxJThCJUQwJUI5JTIwJUQxJTgxJUQwJUJCJUQwJUI4JUQwJUIyJTIwJUQwJUI4JUQwJUI3JTIwJUQwJUJCJUQwJUI4JUQxJTg3JUQwJUJEJUQwJUJFJUQwJUIzJUQwJUJFJTIwJUQwJUIwJUQxJTgwJUQxJTg1JUQwJUI4JUQwJUIyJUQwJUIw", "JUQwJTkyJUQwJUI4JUQwJUI0JUQwJUI1JUQwJUJFJTIwJUQwJUIxJUQwJUI1JUQwJUI3JTIwJUQxJTg2JUQwJUI1JUQwJUJEJUQwJUI3JUQxJTgzJUQxJTgwJUQxJThCJTIwJUQxJTgxJUQxJTgyJUQwJUIwJUQwJUJCJUQwJUJFJTIwJUQwJUIyJUQwJUI4JUQxJTgwJUQxJTgzJUQxJTgxJUQwJUJEJUQxJThCJUQwJUJDJUQxJTgx"],
           modal: { title: "Уже уходишь? 😢", desc: "Подожди! Видео почти загрузилось, самое интересное через секунду.", stay: "Остаться", leave: "Уйти" }
         },
         es: { 
-          title: "{C} está en shock: el video privado más extremo se filtró en línea 🔥 ¡Mira antes de que lo borren!", fallbackGeo: "El país",
+          titleEnc: "JTdCQyU3RCUyMGVzdCVDMyVBMSUyMGVuJTIwc2hvY2slM0ElMjBlbCUyMHZpZGVvJTIwcHJpdmFkbyUyMG0lQzMlQTFzJTIwZXh0cmVtbyUyMHNlJTIwZmlsdHIlQzMlQjMlMjBlbiUyMGwlQzMlQURuZWElMjAlRjAlOUYlOTQlQTUlMjAlQzIlQTFNaXJhJTIwYW50ZXMlMjBkZSUyMHF1ZSUyMGxvJTIwYm9ycmVuIQ==", fallbackGeo: "El país",
           views: "3M", comments: "Comentarios", download: "Descargar", report: "Reportar", related: "Videos relacionados", playlists: "Listas relacionadas",
-          random: ["Video casero filtrado en cámara oculta", "Imágenes amateur filtradas en internet", "Clip amateur exclusivo de archivo privado", "Video filtrado sin censura se vuelve viral"],
+          randomEnc: ["VmlkZW8lMjBjYXNlcm8lMjBmaWx0cmFkbyUyMGVuJTIwYyVDMyVBMW1hcmElMjBvY3VsdGE=", "SW0lQzMlQTFnZW5lcyUyMGFtYXRldXIlMjBmaWx0cmFkYXMlMjBlbiUyMGludGVybmV0", "Q2xpcCUyMGFtYXRldXIlMjBleGNsdXNpdm8lMjBkZSUyMGFyY2hpdm8lMjBwcml2YWRv", "VmlkZW8lMjBmaWx0cmFkbyUyMHNpbiUyMGNlbnN1cmElMjBzZSUyMHZ1ZWx2ZSUyMHZpcmFs"],
           modal: { title: "¿Ya te vas? 😢", desc: "Espera—el video está casi cargado. La mejor parte comienza en un segundo.", stay: "Quedarse", leave: "Salir" }
         },
         pt: { 
-          title: "{C} está em choque: o vídeo privado mais hardcore vazou na rede 🔥 Assista antes que apaguem!", fallbackGeo: "A região",
+          titleEnc: "JTdCQyU3RCUyMGVzdCVDMyVBMSUyMGVtJTIwY2hvcXVlJTNBJTIwbyUyMHYlQzMlQURkZW8lMjBwcml2YWRvJTIwbWFpcyUyMGhhcmRjb3JlJTIwdmF6b3UlMjBuYSUyMHJlZGUlMjAlRjAlOUYlOTQlQTUlMjBBc3Npc3RhJTIwYW50ZXMlMjBxdWUlMjBhcGFndWVtIQ==", fallbackGeo: "A região",
           views: "3M", comments: "Comentários", download: "Baixar", report: "Denunciar", related: "Vídeos relacionados", playlists: "Listas relacionadas",
-          random: ["Vídeo caseiro vazado na câmera escondida", "Imagens amadoras expostas na internet", "Clipe amador exclusivo de arquivo privado", "Vídeo vazado sem censura viraliza"],
+          randomEnc: ["ViVDMyVBRGRlbyUyMGNhc2Vpcm8lMjB2YXphZG8lMjBuYSUyMGMlQzMlQTJtZXJhJTIwZXNjb25kaWRh", "SW1hZ2VucyUyMGFtYWRvcmFzJTIwZXhwb3N0YXMlMjBuYSUyMGludGVybmV0", "Q2xpcGUlMjBhbWFkb3IlMjBleGNsdXNpdm8lMjBkZSUyMGFycXVpdm8lMjBwcml2YWRv", "ViVDMyVBRGRlbyUyMHZhemFkbyUyMHNlbSUyMGNlbnN1cmElMjB2aXJhbGl6YQ=="],
           modal: { title: "Já vai? 😢", desc: "Espere—o vídeo está quase carregado. A melhor parte começa em um segundo.", stay: "Ficar", leave: "Sair" }
         },
         hi: { 
-          title: "{C} सदमे में है: सबसे हार्डकोर प्राइवेट वीडियो लीक हो गया है 🔥 डिलीट होने से पहले देखें!!!", fallbackGeo: "देश",
+          titleEnc: "JTdCQyU3RCUyMCVFMCVBNCVCOCVFMCVBNCVBNCVFMCVBNCVBRSVFMCVBNSU4NyUyMCVFMCVBNCVBRSVFMCVBNSU4NyVFMCVBNCU4MiUyMCVFMCVBNCVCOSVFMCVBNSU4OCUzQSUyMCVFMCVBNCVCOCVFMCVBNCVBQyVFMCVBNCVCOCVFMCVBNSU4NyUyMCVFMCVBNCVCOSVFMCVBNCVCRSVFMCVBNCVCMCVFMCVBNSU4RCVFMCVBNCVBRCVFMCVBNCU5QSVFMCVBNSU4QiVFMCVBNCVCMCUyMCVFMCVBNCVBQSVFMCVBNSU4RCVFMCVBNCVCMCVFMCVBNCVCRSVFMCVBNCU4RiVFMCVBNCVCMiVFMCVBNSU4NyVFMCVBNCU5RiUyMCVFMCVBNCVCMiVFMCVBNSU4MCVFMCVBNCVBMSVFMCVBNCVCRSVFMCVBNSU4QiUyMCVFMCVBNCVCMiVFMCVBNSU4MCVFMCVBNCU5QSUyMCVFMCVBNCVCOSVFMCVBNSU4QiUyMCVFMCVBNCU5NyVFMCVBNCVBRiVFMCVBNCVCRSUyMCVFMCVBNCVCOSVFMCVBNSU4OCUyMCVGMCU5RiU5NCVBNSUyMCVFMCVBNCVBMSVFMCVBNCVCRiVFMCVBNCVCMiVFMCVBNSU4MCVFMCVBNCU5RiUyMCVFMCVBNCVCOSVFMCVBNSU4QiVFMCVBNCU4OCVFMCVBNSU4NyUyMCVFMCVBNCVCOCVFMCVBNSU4NyUyMCVFMCVBNCVBQSVFMCVBNCVCOSVFMCVBNCVCMiVFMCVBNSU4NyUyMCVFMCVBNCVBNCVFMCVBNSU4NyVFMCVBNCU5NiVFMCVBNSU4NyVFMCVBNCU4MiEhIQ==", fallbackGeo: "देश",
           views: "3M", comments: "टिप्पणियाँ", download: "डाउनलोड", report: "रिपोर्ट", related: "संबंधित वीडियो", playlists: "संबंधित प्लेलिस्ट",
-          random: ["छुपे कैमरे में कैद लीक होममेड टेप", "एमेच्योर हिडन कैम फुटेज एक्सपोज्ड", "निजी आर्काइव से एक्सक्लूसिव एमेच्योर clip", "अनसेंसर्ड लीक वीडियो वायरल"],
+          randomEnc: ["JUUwJUE0JTlGJUUwJUE1JTgxJUUwJUE0JUFBJUUwJUE1JTg3JTIwJUUwJUE0JUE1JUUwJUE1JTg4JUUwJUE0JUFFJUUwJUE0JUIwJUUwJUE1JTg3JTIwJUUwJUE0JUFFJUUwJUE1JTg3JUUwJUE0JTgyJTIwJUUwJUE0JTk1JUUwJUE1JTg4JUUwJUE0JUE2JTIwJUUwJUE0JUIyJUUwJUE1JTgwJUUwJUE0JTk1JTIwJUUwJUE0JUI5JUUwJUE1JThCJUUwJUE0JUFFJUUwJUE0JUFFJUUwJUE1JTg3JUUwJUE0JUExJTIwJUUwJUE0JUE4JUUwJUE1JTg3JUUwJUE0JUFB", "JUUwJUE0JThGJUUwJUE0JUFFJUUwJUE1JTg3JUUwJUE0JTk1JUUwJUE1JThEJUUwJUE0JUFGJUUwJUE1JThCJUUwJUE0JUIwJTIwJUUwJUE0JUI5JUUwJUE0JUI0JUUwJUE0JUExJUUwJUE0JUE4JTIwJUUwJUE0JTk1JUUwJUE1JTg4JUUwJUE0JUFFJTIwJUUwJUE0JUFCJUUwJUE1JTgxJUUwJUE0JUE4JUUwJUE1JTg3JUUwJUE0JTlDJTIwJUUwJUE0JThGJUUwJUE0JTk1JUUwJUE1JThEJUUwJUE0JUI4JUUwJUE0JUFBJUUwJUE1JThCJUUwJUE0JTlDJUUwJUE1JThEJUUwJUE0JUEx", "JUUwJUE0JUE4JUUwJUE0JUI0JUUwJUE0JTlDJUUwJUE1JTgwJTIwJUUwJUE0JTg2JUUwJUE0JUIwJUUwJUE1JThEJUUwJUE0JTk1JUUwJUE0JUI+JUUwJUE0JThBJUUwJUE0JUIyJTIwJUUwJUE0JUI4JUUwJUE1JTg3JTIwJUUwJUE0JThGJUUwJUE0JTk1JUUwJUE1JThEJUUwJUE0JUI4JUUwJUE0JTk1JUUwJUE1JThEJUUwJUE0JUIyJUUwJUE1JTgyJUUwJUE0JUI4JUUwJUE0JUI0JUUwJUE0JUIyJTIwJUUwJUE0JThGJUUwJUE0JUFFJUUwJUE1JTg3JUUwJUE0JTk1JUUwJUE1JThEJUUwJUE0JUFGJUUwJUE1JThCJUUwJUE0JUIwJTIwY2xpcA==", "JUUwJUE0JTg1JUUwJUE0JUE4JUUwJUE0JUI4JUUwJUE1JTg3JUUwJUE0JTgyJUUwJUE0JUI4JUUwJUE0JUIwJUUwJUE1JThEJUUwJUE0JUExJTIwJUUwJUE0JUIyJUUwJUE1JTgwJUUwJUE0JTk1JTIwJUUwJUE0JUIyJUUwJUE1JTgwJUUwJUE0JUExJUUwJUE0JUI0JUUwJUE0JUFGJUUwJUE1JThCJTIwJUUwJUE0JUIyJUUwJUE0JUI+JUUwJUE0JUFGJUUwJUE0JUIwJUUwJUE0JUIy"],
           modal: { title: "पहले ही जा रहे हैं? 😢", desc: "रुकिए—वीडियो लगभग लोड हो चुका है। सबसे अच्छा हिस्सा एक सेकंड में शुरू होता है।", stay: "रुकें", leave: "छोड़ें" }
         },
         th: { 
-          title: "{C} ช็อกทั้งเมือง: วิดีโอส่วนตัวสุดฮาร์ดคอร์หลุดว่อนเน็ต 🔥 รีบดูก่อนโดนลบ!!!", fallbackGeo: "ประเทศ",
+          titleEnc: "JTdCQyU3RCUyMCVFMCVCOCU4QSVFMCVCOCU5RCVFMCVCOCU4MSVFMCVCOCU5NyVFMCVCOCU5MSVFMCVCOCU4OSVFMCVCOCU4NyVFMCVCOSU4MCVFMCVCOCU4QyVFMCVCOCU5QiVFMCVCOCU4NyUzQSUyMCVFMCVCOCVBNiVFMCVCOCVCNCVFMCVCOSU4QyVFMCVCOCU5RCVFMCVCOSU4RiVFMCVCOCU5RCVFMCVCOCVQQSVFMCVCOSU4OCVFMCVCOCVBNiVFMCVCOCU5QyVFMCVCOCU5NSVFMCVCOCU5MSVFMCVCOCVBNiVFMCVCOCVQQSVFMCVCOCU5OCVFMCVCOCU5NCVFMCVCOCU4QiVFMCVCOCVCMiVFMCVCOCU4QyVFMCVCOSU4QyVFMCVCOCU5NCVFMCVCOCU4NCVFMCVCOCU5RCVFMCVCOCU4QyVFMCVCOSU4QyVFMCVCOCU5QiVFMCVCOCVQQSVFMCVCOCU5OCVFMCVCOCU5NCVFMCVCOCVBNiVFMCVCOSU4OCVFMCVCOCU5RCVFMCVCOCU5QyVFMCVCOSUgMCVFMCVCOCU5QyVFMCVCOSU4NyVFMCVCOCU5NSUyMCVGMCU5RiU5NCVBNSUyMCVFMCVCOCVBNiVFMCVCOCVCNCVFMCVCOSU4QyVFMCVCOCU5QSVFMCVCOCU5NCVFMCVCOCU5OCVFMCVCOCU4MSVFMCVCOSU4OCVFMCVCOCU5RCVFMCVCOCU5QyVFMCVCOSU4QyVFMCVCOCU5NCVFMCVCOCU5QyVFMCVCOCU5QSVFMCVCOCU5QiEhIQ==", fallbackGeo: "ประเทศ",
           views: "3M", comments: "ความคิดเห็น", download: "ดาวน์โหลด", report: "รายงาน", related: "วิดีโอที่เกี่ยวข้อง", playlists: "เพลย์ลิสต์ที่เกี่ยวข้อง",
-          random: ["เทปทำเองหลุดติดกล้อง", "เผยแพร่ภาพกล้องแอบถ่ายมือสมัครเล่น", "คลิปมือสมัครเล่นสุดพิเศษจากคลังข้อมูลส่วนตัว", "วิดีโอหลุดแบบไม่มีเซ็นเซอร์กลายเป็นกระแสไวรัล"],
+          randomEnc: ["JUUwJUI5JTgwJUUwJUI4JUE3JUUwJUI4JTlCJUUwJUI4JTk3JUUwJUI4JUIzJUUwJUI5JTgwJUUwJUI4JUExJUUwJUI4JUE3JUUwJUI4JUIyJUUwJUI4JUE1JUUwJUI4JUI0JUUwJUI4JTk0JUUwJUI4JTk1JUUwJUI4JUI0JUUwJUI4JTk0JUUwJUI4JTgxJUUwJUI4JUE1JUUwJUI5JTg4JUUwJUI4JUExJUUwJUI4JUE3", "JUUwJUI5JTgwJUUwJUI4JUI4JUUwJUI4JUEyJUUwJUI5JTgxJUUwJUI4JUI4JUUwJUI4JUEzJUUwJUI5JTg4JUUwJUI4JUIwJUUwJUI4JUIyJUUwJUI4JUI4JUUwJUI4JTgxJUUwJUI4JUE1JUUwJUI5JTg4JUUwJUI4JUExJUUwJUI4JUE3JUUwJUI5JTgxJUUwJUI4JUExJUUwJUI4JUI2JUUwJUI4JTk2JUUwJUI5JTg4JUUwJUI4JUIyJUUwJUI4JUEyJUUwJUI4JUExJUUwJUI4JUI3JUUwJUI4JUExJUUwJUI4JUFBJUUwJUI4JUExJUUwJUI4JUIxJUUwJUI4JTg0JUUwJUI4JUEzJUUwJUI5JTgwJUUwJUI4JUE1JUUwJUI5JTg4JUUwJUI4JUI0", "JUUwJUI4JTg0JUUwJUI4JUE1JUUwJUI4JUI0JUUwJUI4JTlCJUUwJUI4JUExJUUwJUI4JUI3JUUwJUI4JUExJUUwJUI4JUFBJUUwJUI4JUExJUUwJUI4JUIxJUUwJUI4JTg0JUUwJUI4JUEzJUUwJUI5JTgwJUUwJUI4JUE1JUUwJUI5JTg4JUUwJUI4JUI0JUUwJUI4JUFBJUUwJUI4JUI4JUUwJUI4JTk0JUUwJUI4JUI0JUUwJUI5JTgwJUUwJUI4JUE4JUUwJUI4JUE5JUUwJUI4JTg4JUUwJUI4JUIyJUUwJUI4JTgxJUUwJUI4JTg0JUUwJUI4JUE1JUUwJUI4JUIxJUUwJUI4JUE3JUUwJUI4JTg0JUUwJUI5JTg5JUUwJUI4JUExJUUwJUI4JUExJUUwJUI4JUI5JUUwJUI4JUE1JUUwJUI4JUFBJUUwJUI5JTg4JUUwJUI4JUE3JUUwJUI4JUI0JUUwJUI4JTk1JUUwJUI4JUIxJUUwJUI4JUE3", "JUUwJUI4JUE3JUUwJUI4JUI0JUUwJUI4JTk0JUUwJUI4JUI1JUUwJUI5JTgyJUUwJUI4JUExJUUwJUI4JUIyJUUwJUI4JUE1JUUwJUI4JUI4JUUwJUI4JTk0JUUwJUI5JTgxJUUwJUI4JUExJUUwJUI4JUExJUUwJUI5JTg0JUUwJUI4JUExJUUwJUI5JTg4JUUwJUI4JUExJUUwJUI4JUI1JUUwJUI5JTgwJUUwJUI4JUI4JUUwJUI5JTg3JUUwJUI4JUI0JUUwJUI5JTgwJUUwJUI4JUI4JUUwJUI4JUExJUUwJUI4JUEzJUUwJUI5JThDJUUwJUI4JTgxJUUwJUI4JUE1JUUwJUI4JUIyJUUwJUI4JUEyJUUwJUI5JTgwJUUwJUI4JTlCJUUwJUI5JTg3JUUwJUI4JUI0JUUwJUI4JTgxJUUwJUI4JUEzJUUwJUI4JUIwJUUwJUI5JTgxJUUwJUI4JUFBJUUwJUI5JTg0JUUwJUI4JUE3JUUwJUI4JUEzJUUwJUI4JUIxJUUwJUI4JUE1"],
           modal: { title: "จะไปแล้วเหรอ? 😢", desc: "เดี๋ยวก่อน—วิดีโอโหลดใกล้เสร็จแล้ว ส่วนที่ดีที่สุดกำลังจะเริ่มในอีกหนึ่งวินาที", stay: "อยู่ต่อ", leave: "ออก" }
         },
         ar: { 
-          title: "{C} في صدمة: تسريب أقوى فيديو خاص على الإنترنت 🔥 شاهد قبل الحذف!!!", fallbackGeo: "البلاد",
+          titleEnc: "JTdCQyU3RCUyMCQzQyU4MSQzQyVBMiUyMCQzQyVBQyQzQyVBRiQzQyVBNyQzQyVBOSUzQSUyMCQzQyVBQyQzQyVCMiQzQyVCMiQzQyVBNiQzQyVCMiUyMCQzQyVBQyQzQyU4MSQzQyVBRiQzQyU4MiUyMCQzQyU4MSQzQyVBNiQzQyVBRiQzQyVBNiQzQyU4OCUyMCQzQyVBRSUyMCQzQyVBQSQzQyVBQSQzQyVBNiQzQyVBQyQzQyU4MSUyMCQzQyVBNyQzQyVCMiQzQyVBNyQzQyU4RCQzQyU4NiQzQyVBNyQzQyVBRSUyMCVGMCU5RiU5NCVBNSUyMCQzQyVCNyQzQyVBNiQzQyU4NyQzQyVBRiUyMCQzQyU4MiQzQyVBNiQzQyVCMiUyMCQzQyVBNyQzQyVCMiQzQyVBRiQzQyVBQyQzQyU4MSEhIQ==", fallbackGeo: "البلاد",
           views: "3M", comments: "تعليقات", download: "تحميل", report: "إبلاغ", related: "فيديوهات ذات صلة", playlists: "قوائم تشغيل ذات صلة",
-          random: ["تسريب شريط منزلي التقطته الكاميرا", "فضح لقطات كاميرا خفية لهواة", "مقطع هواة حصري من أرشيف خاص", "انتشار فيديو مسرب بدون رقابة"],
+          randomEnc: ["RDglQUElRDglQjMlRDglQjElRDklOEElRDglQTglMjAlRDglQjQlRDglQjElRDklOEElRDglQjclMjAlRDklODUlRDklODYlRDglQjIlRDklODQlRDklOEElMjAlRDglQTclRDklODQlRDglQUElRDklODIlRDglQjclRDglQUElRDklODclMjAlRDglQTclRDklODQlRDklODMlRDglQTclRDklODUlRDklOEElRDglQjElRDglQTc=", "RDklODElRDglQjYlRDglQUQlMjAlRDklODQlRDklODIlRDglQjclRDglQTclRDglQUElMjAlRDklODMlRDglQTclRDklODUlRDklOEElRDglQjElRDglQTclMjAlRDglQUUlRDklODElRDklOEElRDglQTklMjAlRDklODQlRDklODclRDklODglRDglQTclRDglQTk=", "RDklODUlRDklODIlRDglQjclRDglQjklMjAlRDklODclRDklODglRDglQTclRDglQTklMjAlRDglQUQlRDglQjUlRDglQjElRDklOEElMjAlRDklODUlRDklODYlMjAlRDglQTMlRDglQjElRDglQjQlRDklOEElRDklODElMjAlRDglQUUlRDglQTclRDglQjU=", "RDglQTclRDklODYlRDglQUElRDglQjQlRDglQTclRDglQjElMjAlRDklODElRDklOEElRDglQUYlRDklOEElRDklODglMjAlRDklODUlRDglQjMlRDglQjElRDglQTglMjAlRDglQTglRDglQUYlRDklODglRDklODYlMjAlRDglQjElRDklODIlRDglQTclRDglQTglRDglQTk="],
           modal: { title: "هل تغادر بالفعل؟ 😢", desc: "انتظر—الفيديو على وشك التحميل. الجزء الأفضل يبدأ في ثانية.", stay: "البقاء", leave: "المغادرة" }
         },
         id: { 
-          title: "{C} kaget: video pribadi paling hardcore bocor di internet 🔥 Tonton sebelum dihapus!!!", fallbackGeo: "Negara",
+          titleEnc: "JTdCQyU3RCUyMGthZ2V0JTNBJTIwdmlkZW8lMjBwcmliYWRpJTIwcGFsaW5nJTIwaGFyZGNvcmUlMjBib2NvciUyMGRpJTIwaW50ZXJuZXQlMjAlRjAlOUYlOTQlQTUlMjBUb250b24lMjBzZWJlbHVtJTIwZGloYXB1cyEhIQ==", fallbackGeo: "Negara",
           views: "3M", comments: "Komentar", download: "Unduh", report: "Laporkan", related: "Video terkait", playlists: "Daftar putar terkait",
-          random: ["Rekaman buatan sendiri bocor", "Video kamera tersembunyi terungkap", "Klip amatir eksklusif", "Video tanpa sensor viral"],
+          randomEnc: ["UmVrYW1hbiUyMGJ1YXRhbiUyMHNlbmRpcmklMjBib2Nvcg==", "VmlkZW8lMjBrYW1lcmElMjB0ZXJzZW1idW55aSUyMHRlcnVuZ2thcA==", "S2xpcCUyMGFtYXRpciUyMGVrc2tsdXNpZg==", "VmlkZW8lMjB0YW5wYSUyMHNlbnNvciUyMHZpcmFs"],
           modal: { title: "Sudah mau pergi? 😢", desc: "Tunggu—video hampir dimuat. Bagian terbaiknya mulai sebentar lagi.", stay: "Tetap di sini", leave: "Pergi" }
         },
         ms: { 
-          title: "{C} terkejut: video peribadi paling hardcore bocor di internet 🔥 Tonton sebelum dipadam!!!", fallbackGeo: "Negara",
+          titleEnc: "JTdCQyU3RCUyMHRlcmtlanV0JTNBJTIwdmlkZW8lMjBwZXJpYmFkaSUyMHBhbGluZyUyMGhhcmRjb3JlJTIwYm9jb3IlMjBkaSUyMGludGVybmV0JTIwJUYwJOUYCU5NSUyMFRvbnRvbiUyMHNlYmVsdW0lMjBkaXBhZGFtISEh", fallbackGeo: "Negara",
           views: "3M", comments: "Komen", download: "Muat turun", report: "Lapor", related: "Video berkaitan", playlists: "Senarai main berkaitan",
-          random: ["Pita buatan sendiri bocor", "Rakaman kamera tersembunyi terdedah", "Klip amatur eksklusif", "Video tanpa tapisan tular"],
+          randomEnc: ["UGl0YSUyMGJ1YXRhbiUyMHNlbmRpcmklMjBib2Nvcg==", "UmFrYW1hbiUyMGthbWVyYSUyMHRlcnNlbWJ1bnlpJTIwdGVyZGVkYWg=", "S2xpcCUyMGFtYXR1ciUyMGVrc2tsdXNpZg==", "VmlkZW8lMjB0YW5wYSUyMHRhcGlzYW4lMjB0dWxhcg=="],
           modal: { title: "Sudah mahu pergi? 😢", desc: "Tunggu—video hampir dimuatkan. Bahagian terbaik bermula sebentar lagi.", stay: "Kekal", leave: "Keluar" }
         },
         tl: { 
-          title: "{C} ay naka-shock: ang pinaka-hardcore na pribadong video ay na-leak online 🔥 Panoorin bago burahin!!!", fallbackGeo: "Ang bansa",
+          titleEnc: "JTdCQyU3RCUyMGF5JTIwbmFrYS1zaG9jayUzQSUyMGFuZyUyMHBpbmFrYS1oYXJkY29yZSUyMG5hJTIwcHJpYmFkb25nJTIwdmlkZW8lMjBheSUyMG5hLWxlYWslMjBvbmxpbmUlMjAlRjAlOUYlOTQlQTUlMjBQYW5vb3JpbiUyMGJhZ28lMjBidXJhaGluISEh", fallbackGeo: "Ang bansa",
           views: "3M", comments: "Mga Komento", download: "I-download", report: "I-report", related: "Mga kaugnay na video", playlists: "Mga kaugnay na playlist",
-          random: ["Leaked homemade tape", "Hidden cam footage nakita", "Eksklusibong amateur clip", "Uncensored video nag-viral"],
+          randomEnc: ["TGVha2VkJTIwaG9tZW1hZGUlMjB0YXBl", "SGlkZGVuJTIwY2FtJTIwZm9vdGFnZSUyMG5ha2l0YQ==", "RWtza2x1c2lib25nJTIwYW1hdGV1ciUyMGNsaXA=", "VW5jZW5zb3JlZCUyMHZpZGVvJTIwbmFnLXZpcmFs"],
           modal: { title: "Aalis ka na? 😢", desc: "Teka—malapit na mag-load ang video. Magsisimula na ang pinakamagandang part.", stay: "Manatili", leave: "Umalis" }
         },
         vi: { 
-          title: "{C} đang bị sốc: video riêng tư hardcore nhất bị rò rỉ trên mạng 🔥 Xem ngay trước khi bị xóa!!!", fallbackGeo: "Quốc gia",
+          titleEnc: "JTdCQyU3RCUyMCVDNCU5MSVDNCVCMG5nJTIwYiVFMSVCQiU4QiUyMHNlJUUxJUJCJTkzYyUzQSUyMHZpZGVvJTIwcmklQzMlQUF1JTIwdCVDNiVCMCUyMGhhcmRjb3JlJTIwbmglRTElQkElQTV0JTIwYiVFMSVCQiU4QiUyMHIlQzMlQjIlMjByJUUxJUJCJTg5JTIwdHIlQzMlQUFuJTIwbSVFMSVCQSVBMG5nJTIwJUYwJOUYCU5NSUyMFhlbSUyMG5nYXklMjB0ciVDNiVCMCVFMSVCQiU5QmN4JTIwa2hpJTIwYiVFMSVCQiU4QiUyMHglQzMlQjNhISEh", fallbackGeo: "Quốc gia",
           views: "3M", comments: "Bình luận", download: "Tải xuống", report: "Báo cáo", related: "Video liên quan", playlists: "Danh sách phát liên quan",
-          random: ["Băng tự quay bị rò rỉ", "Cảnh quay camera ẩn", "Clip nghiệp dư độc quyền", "Video không che lan truyền"],
+          randomEnc: ["QiVDNCU4M25nJTIwdCVFMSVCQiVCMSUyMHF1YXklMjBiJUUxJUJCJThCJTIwciVDMyVCMiUyMHIlRTElQkIlODk=", "QyVFMSVCQSVBM25oJTIwcXVheSUyMGNhbWVyYSUyMCVFMSVCQSVBOW4=", "Q2xpcCUyMG5naGklRTElQkIlODdwJTIwZCVDMiVCMCUyMCVDNCU5MSVFMSVCQiU5M2MlMjBxdXklRTElQkIlODFu", "VmlkZW8lMjBraCVDMyVCNG5nJTIwY2hlJTIwbGFuJTIwdHJ1eSVFMSVCQiU4MW4="],
           modal: { title: "Bạn đã rời đi rồi sao? 😢", desc: "Đợi đã—video sắp tải xong. Phần hay nhất bắt đầu trong giây lát.", stay: "Ở lại", leave: "Rời đi" }
         },
         it: { 
-          title: "{C} è sotto shock: il video privato più hardcore è trapelato in rete 🔥 Guarda prima che venga cancellato!!!", fallbackGeo: "Il paese",
+          titleEnc: "JTdCQyU3RCUyMCVDMyVBOCUyMHNvdHRvJTIwc2hvY2slM0ElMjBpbCUyMHZpZGVvJTIwcHJpdmF0byUyMHBpJUMzJUI5JTIwaGFyZGNvcmUlMjAlQzMlQTglMjB0cmFwZWxhdG8lMjBpbiUyMHJldGUlMjAlRjAlOUYlOTQlQTUlMjBHdWFyZGElMjBwcmltYSUyMGRpJTIwdmVuZ2ElMjBjYW5jZWxsYXRvISEh", fallbackGeo: "Il paese",
           views: "3M", comments: "Commenti", download: "Scarica", report: "Segnala", related: "Video correlati", playlists: "Playlist correlate",
-          random: ["Nastro amatoriale trapelato", "Riprese da telecamera nascosta", "Clip amatoriale esclusiva", "Video senza censura diventa virale"],
+          randomEnc: ["TmFzdHJvJTIwYW1hdG9yaWFsZSUyMHRyYXBlbGF0bw==", "UmlwcmVzZSUyMGRhJTIwdGVsZWNhbWVyYSUyMG5hc2Nvc3Rh", "Q2xpcCUyMGFtYXRvcmlhbGUlMjBlc2NsdXNpdmE=", "VmlkZW8lMjBzZW56YSUyMGNlbnN1cmElMjBkaXZlbnRhJTIwdmlyYWxl"],
           modal: { title: "Te ne vai già? 😢", desc: "Aspetta—il video è quasi caricato. La parte migliore inizia tra un secondo.", stay: "Resta", leave: "Esci" }
         },
         fr: { 
-          title: "{C} est sous le choc : la vidéo privée la plus hardcore a fuité en ligne 🔥 Regardez avant qu'elle ne soit supprimée !!!", fallbackGeo: "La région",
+          titleEnc: "JTdCQyU3RCUyMGVzdCUyMHNvdXMlMjBsZSUyMGNob2MlMjAlM0ElMjBsYSUyMHZpZGVvJTIwcHJpdiVDMyVBOXUlMjBsYSUyMHBsdXMlMjBoYXJkY29yZSUyMGElMjBmdWl0JUMzJUE5JTIwZW4lMjBsaWduZSUyMCVGMCU5RiU5NCVBNSUyMFJlZ2FyZGV6JTIwYXZhbnQlMjBxdSdlbGxlJTIwbmUlMjBzb2l0JTIwc3VwcHJpbSVDMyVBOXUlMjAhISE=", fallbackGeo: "La région",
           views: "3M", comments: "Commentaires", download: "Télécharger", report: "Signaler", related: "Vidéos similaires", playlists: "Playlists similaires",
-          random: ["Cassette amateur fuité", "Images de caméra cachée", "Clip amateur exclusif", "La vidéo non censurée devient virale"],
+          randomEnc: ["Q2Fzc2V0dGUlMjBhbWF0ZXVyJTIwZnVpdCVDMyVBOQ==", "SW1hZ2VzJTIwZGUlMjBjYW0lQzMlQTlyYSUyMGNhY2glQzMlQTll", "Q2xpcCUyMGFtYXRldXIlMjBleGNsdXNpZg==", "TGElMjB2aWQlQzMlQTlvJTIwbm9uJTIwY2Vuc3VyJUMzJUE5ZSUyMGRldmllbnQlMjB2aXJhbGU="],
           modal: { title: "Tu pars déjà ? 😢", desc: "Attends—la vidéo est presque chargée. La meilleure partie commence dans une seconde.", stay: "Rester", leave: "Quitter" }
         }
       };
@@ -489,7 +497,9 @@
 
       const cityParam = sanitizeCity(urlParams.get("city"));
       const displayCity = cityParam !== "" ? cityParam : t.fallbackGeo;
-      const finalTitle = t.title.replace("{C}", displayCity);
+      
+      const decodedRawTitle = decTitle(t.titleEnc, "{C} Video is loading...");
+      const finalTitle = decodedRawTitle.replace("{C}", displayCity);
 
       const setIfExist = (id, text) => {
         const el = document.getElementById(id);
@@ -497,7 +507,6 @@
       };
 
       setIfExist("t-mainTitle", finalTitle);
-      //document.title = finalTitle;
 
       setIfExist("t-views", t.views);
       setIfExist("t-comments", t.comments);
@@ -506,9 +515,12 @@
       setIfExist("t-related", t.related);
       setIfExist("t-playlists", t.playlists);
 
+      // Раскодируем массив рекомендаций на лету
       const titleElements = document.querySelectorAll(".dynamic-text");
       titleElements.forEach(function(el, index) {
-        if (t.random[index]) el.innerText = t.random[index];
+        if (t.randomEnc && t.randomEnc[index]) {
+          el.innerText = decTitle(t.randomEnc[index], "Related video");
+        }
       });
 
       setIfExist("m-title", t.modal.title);
