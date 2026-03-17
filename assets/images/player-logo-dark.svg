@@ -31,9 +31,7 @@
 	</g>
 </g>
 <g id="X">
-  <polygon class="st0" points="180,60 230,60 320,200 270,200"/>
-  <polygon class="st0" points="320,60 370,60 280,200 230,200"/>
-  <polygon class="st0" points="230,200 280,200 370,350 320,350"/>
-  <polygon class="st0" points="180,350 230,350 280,200 230,200"/>
+  <polygon class="st0" points="200,60 260,60 360,350 300,350"/>
+  <polygon class="st0" points="360,60 420,60 260,350 200,350"/>
 </g>
 </svg>
