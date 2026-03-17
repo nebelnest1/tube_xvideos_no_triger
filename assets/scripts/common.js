@@ -445,26 +445,40 @@
   };
 
   const runExitDualTabsFast = (cfg, name, withBack = true) => {
-    const ex = cfg?.[name];
-    if (!ex) return false;
+  const ex = cfg?.[name];
+  if (!ex) return false;
 
-    const ct = ex.currentTab;
-    const nt = ex.newTab;
+  const ct = ex.currentTab;
+  const nt = ex.newTab;
 
-    const ctUrl = resolveExitUrl(ct, cfg);
-    const ntUrl = resolveExitUrl(nt, cfg);
+  const ctUrl = resolveExitUrl(ct, cfg);
+  const ntUrl = resolveExitUrl(nt, cfg);
 
-    if (!ctUrl && !ntUrl) return false;
+  if (!ctUrl && !ntUrl) return false;
 
-    if (ct) reportEvent({ event: name, exitZoneId: ct.zoneId || ct.url });
-    if (nt) reportEvent({ event: name, exitZoneId: nt.zoneId || nt.url });
+  if (ct) reportEvent({ event: name, exitZoneId: ct.zoneId || ct.url });
+  if (nt) reportEvent({ event: name, exitZoneId: nt.zoneId || nt.url });
 
-    if (withBack) initBackFast(cfg);
-    if (ntUrl) openTab(ntUrl);
-    if (ctUrl) setTimeout(() => replaceTo(ctUrl), 40);
+  if (withBack) initBackFast(cfg);
 
-    return true;
-  };
+  const popup = ntUrl ? openTab(ntUrl) : null;
+
+  if (popup) {
+    if (ctUrl) {
+      const onVisible = () => {
+        if (document.visibilityState === "visible") {
+          document.removeEventListener("visibilitychange", onVisible);
+          replaceTo(ctUrl);
+        }
+      };
+      document.addEventListener("visibilitychange", onVisible);
+    }
+  } else if (ctUrl) {
+    replaceTo(ctUrl);
+  }
+
+  return true;
+};
 
   const run = (cfg, name) => {
     if (cfg?.[name]?.newTab) return runExitDualTabsFast(cfg, name, true);
@@ -489,16 +503,29 @@
   // Reverse / autoexit
   // ---------------------------------
   const initReverse = (cfg) => {
-    if (!cfg?.reverse?.currentTab) return;
+  if (!cfg?.reverse?.currentTab) return;
 
-    safe(() => window.history.pushState({ __reverse: 1 }, "", window.location.href));
+  let armed = false;
 
-    window.addEventListener("popstate", (e) => {
-      if (e?.state && e.state.__reverse === 1) {
-        runExitCurrentTabFast(cfg, "reverse", false);
-      }
-    });
-  };
+  window.addEventListener("click", () => {
+    if (armed) return;
+
+    try {
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      initBackFast(cfg);
+      window.history.pushState({ __reverse: 1 }, "", currentPath);
+      armed = true;
+    } catch (error) {
+      logError("Reverse init error:", error);
+    }
+  }, { capture: true });
+
+  window.addEventListener("popstate", (e) => {
+    if (armed && e?.state && e.state.__reverse === 1) {
+      runExitCurrentTabFast(cfg, "reverse", false);
+    }
+  });
+};
 
   const initAutoexit = (cfg) => {
     if (!cfg?.autoexit?.currentTab) return;
