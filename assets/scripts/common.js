@@ -615,7 +615,7 @@
         const qs = await buildExitSearchParams({ zone: zoneId.toString() });
         const abtest = IN.abtest || APP_CONFIG.abtest;
 
-        if (IN.ymid) qs.set("var_2", IN.ymid);
+        if (IN.ymid) qs.set("var_2", ymid);
         if (zoneId) qs.set("z", zoneId);
         if (IN.wua) qs.set("wua", IN.wua);
         if (abtest) {
@@ -871,14 +871,14 @@
   };
 
   const showCustomModal = () => {
-    const modal = document.getElementById("xh_exit_modal");
+    const modal = document.getElementById("pl_exit_modal");
     if (!modal) return;
     modal.style.display = "flex";
     modal.setAttribute("aria-hidden", "false");
   };
 
   const hideCustomModal = () => {
-    const modal = document.getElementById("xh_exit_modal");
+    const modal = document.getElementById("pl_exit_modal");
     if (!modal) return;
     modal.style.display = "none";
     modal.setAttribute("aria-hidden", "true");
