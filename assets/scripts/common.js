@@ -1,305 +1,238 @@
-/* common.js — full version for your XV player landing */
-
 (() => {
   "use strict";
 
-  // ---------------------------------
-  // Safe helpers
-  // ---------------------------------
-  const safe = (fn) => {
-    try { return fn(); } catch { return undefined; }
-  };
-
-  const logError = (...args) => safe(() => console.error(...args));
-
-  const replaceTo = (url) => {
-    try {
-      window.location.replace(url);
-    } catch {
-      window.location.href = url;
+  const localeModules = {
+    "src/landings/player/locale/en.json"(module, exports) {
+      module.exports = {
+        no: "No",
+        yes: "Yes",
+        install_app_and_continue_watching: "Install {app_name} and continue watching content in Safe mode",
+        notification: "(1) Notification",
+        our_app: "our app"
+      };
     }
   };
 
-  const openTab = (url) => {
+  let __localeCache;
+  const loadFallbackLocale = () => {
+    if (__localeCache) return __localeCache;
+    const module = { exports: {} };
+    localeModules[Object.keys(localeModules)[0]](module, module.exports);
+    __localeCache = module.exports;
+    return __localeCache;
+  };
+
+  const EVENTS_HISTORY_KEY = "events_history";
+
+  const getEventsHistory = () => {
     try {
-      const w = window.open(url, "_blank");
-      if (w) {
-        try { w.opener = null; } catch {}
+      const raw = sessionStorage.getItem(EVENTS_HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+      if (error instanceof Error && window.syncMetric) {
+        window.syncMetric({
+          event: "error",
+          errorMessage: error.message,
+          errorType: "CUSTOM",
+          errorSubType: "EventsHistoryGet"
+        });
       }
-      return w || null;
-    } catch {
-      return null;
+      return [];
     }
   };
 
-  const filterObject = (obj) => {
-    const out = {};
-    Object.entries(obj || {}).forEach(([k, v]) => {
-      if (v == null) return;
-      if (typeof v === "string" && v === "") return;
-      out[k] = v;
-    });
-    return out;
-  };
-
-  const qsFromObject = (obj) => {
-    const qs = new URLSearchParams();
-    Object.entries(filterObject(obj)).forEach(([k, v]) => {
-      qs.set(k, String(v));
-    });
-    return qs;
-  };
-
-  // ---------------------------------
-  // Step / current page URL
-  // ---------------------------------
-  const STEP_PARAM = "step";
-  let isContinueStep = false;
-
-  (() => {
-    const initialUrl = new URL(window.location.href);
-    if (initialUrl.searchParams.get(STEP_PARAM) === "1") {
-      isContinueStep = true;
-      initialUrl.searchParams.delete(STEP_PARAM);
-      safe(() => window.history.replaceState(window.history.state, "", initialUrl.toString()));
+  const saveEventsHistory = (history) => {
+    try {
+      sessionStorage.setItem(EVENTS_HISTORY_KEY, JSON.stringify(history));
+    } catch (error) {
+      if (error instanceof Error && window.syncMetric) {
+        window.syncMetric({
+          event: "error",
+          errorMessage: error.message,
+          errorType: "CUSTOM",
+          errorSubType: "EventsHistorySave"
+        });
+      }
     }
-  })();
+  };
+
+  const getLang = () => {
+    const fromQuery = new URLSearchParams(window.location.search).get("lang");
+    const browserLang = navigator.language.split("-")[0];
+    return fromQuery || browserLang || "en";
+  };
+
+  const templateHashesContext = () => window.templateHashes ? JSON.stringify(window.templateHashes) : null;
 
   const pageUrl = new URL(window.location.href);
-  const getSP = (k, def = "") => pageUrl.searchParams.get(k) ?? def;
-
   const IN = {
-    pz: getSP("pz"),
-    tb: getSP("tb"),
-    tb_reverse: getSP("tb_reverse"),
-    ae: getSP("ae"),
-    z: getSP("z"),
-    var: getSP("var"),
-    var_1: getSP("var_1"),
-    var_2: getSP("var_2"),
-    var_3: getSP("var_3"),
-    b: getSP("b"),
-    campaignid: getSP("campaignid"),
-    abtest: getSP("abtest"),
-    rhd: getSP("rhd", "1"),
-    s: getSP("s"),
-    ymid: getSP("ymid"),
-    wua: getSP("wua"),
-    use_full_list_or_browsers: getSP("use_full_list_or_browsers"),
-    cid: getSP("cid"),
-    geo: getSP("geo"),
-
-    external_id: getSP("external_id"),
-    creative_id: getSP("creative_id"),
-    ad_campaign_id: getSP("ad_campaign_id"),
-    cost: getSP("cost"),
-    currency: getSP("currency"),
-
-    campid: getSP("campid"),
-    lang: getSP("lang"),
-    city: getSP("city"),
-    hidden: getSP("hidden"),
-    __poster: getSP("__poster")
+    pz: pageUrl.searchParams.get("pz") ?? "",
+    tb: pageUrl.searchParams.get("tb") ?? "",
+    tb_reverse: pageUrl.searchParams.get("tb_reverse") ?? "",
+    ae: pageUrl.searchParams.get("ae") ?? "",
+    z: pageUrl.searchParams.get("z") ?? "",
+    var: pageUrl.searchParams.get("var") ?? "",
+    var_1: pageUrl.searchParams.get("var_1") ?? "",
+    var_2: pageUrl.searchParams.get("var_2") ?? "",
+    var_3: pageUrl.searchParams.get("var_3") ?? "",
+    b: pageUrl.searchParams.get("b") ?? "",
+    campaignid: pageUrl.searchParams.get("campaignid") ?? "",
+    abtest: pageUrl.searchParams.get("abtest") ?? "",
+    rhd: pageUrl.searchParams.get("rhd") ?? "1",
+    s: pageUrl.searchParams.get("s") ?? "",
+    ymid: pageUrl.searchParams.get("ymid") ?? "",
+    wua: pageUrl.searchParams.get("wua") ?? "",
+    use_full_list_or_browsers: pageUrl.searchParams.get("use_full_list_or_browsers") ?? "",
+    cid: pageUrl.searchParams.get("cid") ?? "",
+    geo: pageUrl.searchParams.get("geo") ?? ""
   };
 
-  // ---------------------------------
-  // Runtime override params
-  // ---------------------------------
-  const runtimeSearchParams = {};
+  const JS_VERSION = "{%ssp_user_id_encoded%}";
 
-  window.app = Object.assign(window.app || {}, {
-    setUrlSearchParam(key, value) {
-      if (!key) return;
-      runtimeSearchParams[String(key)] = String(value);
-    },
-    getUrlSearchParams() {
-      return { ...runtimeSearchParams };
+  const EVENT_NAMES = {
+    start: "start",
+    ageExit: "age_exit",
+    mainExit: "main_exit",
+    push: "push",
+    autoexit: "autoexit",
+    back: "back",
+    reverse: "reverse",
+    tabUnderClick: "tab_under_click",
+    error: "error",
+    unhandledRejection: "unhandled_rejection",
+    template_hash_ready: "template_hash_ready",
+    template_hashes_ready: "template_hashes_ready"
+  };
+
+  const nowUtcSql = (() => {
+    const d = new Date();
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")} ${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}:${String(d.getUTCSeconds()).padStart(2, "0")}.${String(d.getUTCMilliseconds() * 1000).padStart(6, "0")} +00:00`;
+  })();
+
+  const getAb2r = () => IN.abtest || (APP_CONFIG.abtest ? String(APP_CONFIG.abtest) : undefined);
+
+  const buildMetric = ({
+    event,
+    exitZoneId,
+    errorMessage,
+    errorSubType,
+    errorType,
+    skipHistory,
+    skipContext
+  }) => {
+    const ds = document.querySelector("html")?.dataset;
+    const landingName = ds?.landingName || "";
+    const buildVersion = ds?.version || "";
+    const env = ds?.env || "";
+    const host = window.location.host;
+    const mappedEvent = EVENT_NAMES[event] || event;
+    const language = getLang();
+
+    const nowTs = Date.now();
+    const history = getEventsHistory();
+    const prev = history[history.length - 1];
+    const delta = prev ? nowTs - prev.currentTs : 0;
+
+    if (!skipHistory) {
+      history.push({ currentTs: nowTs, eventName: mappedEvent, delta });
+      if (history.length >= 30) history.shift();
+      saveEventsHistory(history);
     }
-  });
 
-  // ---------------------------------
-  // Device / environment helpers
-  // ---------------------------------
-  const getTimezoneName = () => safe(() => Intl.DateTimeFormat().resolvedOptions().timeZone) || "";
-  const getTimezoneOffset = () => safe(() => new Date().getTimezoneOffset()) ?? 0;
+    const payload = [{
+      app: "landings-constructor",
+      event: mappedEvent,
+      language,
+      landing_name: landingName,
+      build_version: buildVersion,
+      landing_domain: host,
+      landing_url: window.location.href,
+      exit_zone_id: exitZoneId ? Number(exitZoneId) : undefined,
+      template_hash: window.templateHash ?? "",
+      request_var: IN.var_3,
+      source_zone_id: Number.isNaN(Number(IN.var_2)) ? null : Number(IN.var_2),
+      sub_id: IN.var_1,
+      landing_load_date_time: nowUtcSql,
+      error_message: errorMessage ?? "",
+      ab2r: getAb2r(),
+      event_history: JSON.stringify({ event_history: JSON.parse(JSON.stringify(getEventsHistory())) }) ?? null,
+      context: skipContext ? undefined : JSON.stringify({ template_hashes: JSON.parse(templateHashesContext() ?? "{}") }),
+      error_sub_type: errorSubType,
+      error_type: errorType,
+      env,
+      js_version: JS_VERSION
+    }];
 
-  let osVersionCached = "";
-  safe(async () => {
-    if (!navigator.userAgentData?.getHighEntropyValues) return;
-    const values = await navigator.userAgentData.getHighEntropyValues(["platformVersion"]);
-    osVersionCached = values?.platformVersion || "";
-  });
+    return {
+      eventData: payload,
+      isAnalyticEnabled: APP_CONFIG.isAnalyticEnabled ?? true
+    };
+  };
 
-  const buildCmeta = () => {
+  const getOsVersion = async () => {
+    const nav = navigator;
+    if (!nav.userAgentData) return "";
     try {
-      const html = document.documentElement;
-      const payload = {
-        dataVer: html.getAttribute("data-version") || html.dataset.version || "",
-        landingName: html.getAttribute("data-landing-name") || html.dataset.landingName || "",
-        templateHash: window.templateHash || ""
-      };
-      return btoa(JSON.stringify(payload));
-    } catch {
+      const values = await nav.userAgentData.getHighEntropyValues(["platformVersion"]);
+      return values.platformVersion;
+    } catch (error) {
+      if (error instanceof Error && window.syncMetric) {
+        window.syncMetric({
+          event: "error",
+          errorMessage: error.message,
+          errorType: "CUSTOM",
+          errorSubType: "FetchPlatformVersion"
+        });
+      }
       return "";
     }
   };
 
-  const getAbtest = () => {
-    if (IN.abtest) return IN.abtest;
-    if (typeof window.APP_CONFIG?.abtest !== "undefined") return String(window.APP_CONFIG.abtest);
-    return "";
-  };
-
-  // ---------------------------------
-  // Analytics wrappers
-  // ---------------------------------
-  const buildMetricPayloadBase64 = ({ event, exitZoneId }) => {
-    const result = safe(() => window.syncMetric?.({
-      event,
-      exitZoneId,
-      skipHistory: true,
-      skipContext: true
-    }));
-
-    if (result?.isAnalyticEnabled && result.eventData) {
-      try {
-        return btoa(JSON.stringify(result.eventData));
-      } catch {
-        return "";
-      }
+  const getTimezone = () => {
+    if (typeof Intl !== "undefined" && typeof Intl.DateTimeFormat === "function") {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) return tz;
     }
-
     return "";
   };
 
-  const reportEvent = ({ event, exitZoneId, errorMessage, errorSubType, errorType }) => {
-    safe(() => {
-      window.reportSyncMetric?.({
-        event,
-        exitZoneId,
-        errorMessage,
-        errorSubType,
-        errorType
-      });
+  const getTimezoneOffset = () => new Date().getTimezoneOffset();
+
+  const objectToSearchParams = (obj) => {
+    const qs = new URLSearchParams();
+    Object.keys(obj).forEach((key) => {
+      if (obj[key]) qs.set(key, obj[key]);
     });
+    return qs;
   };
 
-  // ---------------------------------
-  // Config normalizer
-  // ---------------------------------
-  const normalizeConfig = (appCfg) => {
-    if (!appCfg || typeof appCfg !== "object" || !appCfg.domain) return null;
-
-    const cfg = {
-      domain: appCfg.domain,
-      customSearchParams:
-        typeof appCfg.customSearchParams === "object" && appCfg.customSearchParams !== null
-          ? { ...appCfg.customSearchParams }
-          : {}
-    };
-
-    const ensure = (name) => (cfg[name] ||= {});
-
-    Object.entries(appCfg).forEach(([k, v]) => {
-      if (v == null || v === "") return;
-      if (k === "domain" || k === "customSearchParams") return;
-
-      let m = k.match(/^([a-zA-Z0-9]+)_(currentTab|newTab)_(zoneId|url)$/);
-      if (m) {
-        const [, name, tab, field] = m;
-        const ex = ensure(name);
-        (ex[tab] ||= {});
-        if (field === "zoneId") ex[tab].domain = ex[tab].domain || cfg.domain;
-        ex[tab][field] = v;
-        return;
+  const applyPassParamToParams = ({ passParamToParams, searchParams, windowUrl }) => {
+    passParamToParams.forEach((config) => {
+      const { from, to, joinWith } = config;
+      const value = Array.isArray(from)
+        ? from.map((item) => windowUrl.searchParams.get(item) ?? "").filter(Boolean).join(joinWith ?? "")
+        : (windowUrl.searchParams.get(from) ?? "");
+      if (value) {
+        to.forEach((target) => {
+          searchParams.set(target, value);
+        });
       }
-
-      m = k.match(/^([a-zA-Z0-9]+)_(count|timeToRedirect|pageUrl)$/);
-      if (m) {
-        const [, name, field] = m;
-        ensure(name)[field] = v;
-        return;
-      }
-
-      m = k.match(/^([a-zA-Z0-9]+)_(zoneId|url)$/);
-      if (m) {
-        const [, name, field] = m;
-        const ex = ensure(name);
-        (ex.currentTab ||= {});
-        if (field === "zoneId") ex.currentTab.domain = ex.currentTab.domain || cfg.domain;
-        ex.currentTab[field] = v;
-        return;
-      }
-
-      cfg[k] = v;
     });
-
-    return cfg;
+    return searchParams;
   };
 
-  // ---------------------------------
-  // Exit params builder
-  // Order:
-  // 1) defaults
-  // 2) APP_CONFIG.customSearchParams
-  // 3) window.app.setUrlSearchParam()
-  // 4) current page URL fills only missing keys
-  // ---------------------------------
-  const buildDefaultParams = ({ zoneId } = {}) => {
-  return filterObject({
-    ymid: IN.var_1 || IN.var || IN.ymid || "",
-    var: IN.var_2 || IN.z || IN.var || "",
-    var_1: IN.var_1 || "",
-    var_2: IN.var_2 || "",
-    var_3: IN.var_3 || "",
+  const runtimeSearchParams = {};
+  if (typeof window !== "undefined") {
+    window.app = Object.assign(window.app ?? {}, {
+      setUrlSearchParam: (key, value) => {
+        runtimeSearchParams[key] = String(value);
+      }
+    });
+  }
 
-    b: IN.b || "",
-    campaignid: IN.campaignid || "",
-    click_id: IN.s || "",
-    rhd: IN.rhd || "1",
+  const truthyKeys = (obj) => Object.keys(obj).filter((k) => Boolean(obj[k]));
 
-    os_version: osVersionCached || "",
-    btz: getTimezoneName(),
-    bto: String(getTimezoneOffset()),
-    cmeta: buildCmeta(),
-
-    pz: IN.pz || "",
-    tb: IN.tb || "",
-    tb_reverse: IN.tb_reverse || "",
-    ae: IN.ae || "",
-    ab2r: getAbtest(),
-
-    wua: IN.wua || "",
-    use_full_list_or_browsers: IN.use_full_list_or_browsers || "",
-    cid: IN.cid || "",
-    geo: IN.geo || "",
-
-    external_id: IN.external_id || "",
-    ad_campaign_id: IN.ad_campaign_id || "",
-    cost: IN.cost || "",
-    currency: IN.currency || "usd",
-
-    zoneid: zoneId != null && String(zoneId) !== "" ? String(zoneId) : ""
-  });
-};
-
-  const buildExitSearchParams = ({ cfg, zoneId } = {}) => {
-  const defaults = buildDefaultParams({ zoneId });
-  const custom = filterObject(cfg?.customSearchParams || {});
-  const runtime = filterObject(runtimeSearchParams);
-
-  const merged = {
-    ...defaults,
-    ...custom,
-    ...runtime
-  };
-
-  const lockedKeys = new Set([
-    ...Object.keys(custom),
-    ...Object.keys(runtime)
-  ]);
-
-  const blockedPassthroughKeys = new Set([
+  const BLOCKED_PASSTHROUGH_KEYS = new Set([
     "creative_id",
     "__poster",
     "campid",
@@ -308,303 +241,661 @@
     "hidden"
   ]);
 
-  for (const [key, value] of pageUrl.searchParams.entries()) {
-    if (value == null || String(value) === "") continue;
-    if (blockedPassthroughKeys.has(key)) continue;
-    if (lockedKeys.has(key)) continue;
-    if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
-    merged[key] = value;
-  }
+  const buildExitSearchParams = async ({ zone, passParamToParams }) => {
+    const timezone = getTimezone();
+    const offset = getTimezoneOffset();
 
-  if (zoneId != null && String(zoneId) !== "") {
-    merged.zoneid = String(zoneId);
-  }
+    const dataVer = document.querySelector("html")?.getAttribute("data-version") || "";
+    const landingName = document.querySelector("html")?.getAttribute("data-landing-name") || "";
+    const templateHash = window.templateHash ?? "";
 
-  return qsFromObject(merged);
-};
+    const cmeta = btoa(JSON.stringify({
+      dataVer,
+      landingName,
+      templateHash
+    }));
 
-  // ---------------------------------
-  // URL builders
-  // ---------------------------------
-  const generateAfuUrl = ({ zoneId, domain, cfg }) => {
-    const host = String(domain || "").trim();
-    if (!host || zoneId == null || String(zoneId) === "") return "";
+    const baseAnalytics = {
+      pz: IN.pz,
+      tb: IN.tb,
+      tb_reverse: IN.tb_reverse,
+      ae: IN.ae,
+      ab2r: IN.abtest || String(APP_CONFIG.abtest || "")
+    };
 
-    const base = host.startsWith("http") ? host : `https://${host}`;
-    const target = new URL(`${base.replace(/\/+$/, "")}/afu.php`);
-    target.search = buildExitSearchParams({ cfg, zoneId }).toString();
+    let defaults = {
+      ymid: IN.var_1 ?? IN.var,
+      var: IN.var_2 ?? IN.z,
+      var_3: IN.var_3,
+      b: IN.b,
+      campaignid: IN.campaignid,
+      click_id: IN.s,
+      rhd: IN.rhd,
+      os_version: await getOsVersion(),
+      btz: timezone.toString(),
+      bto: offset.toString(),
+      cmeta
+    };
 
-    return target.toString();
-  };
+    if (zone) defaults.zoneid = zone;
 
-  const buildDirectUrlWithTracking = (baseUrl, cfg) => {
-    try {
-      const target = new URL(String(baseUrl), window.location.href);
-      const exitParams = buildExitSearchParams({ cfg });
+    Object.entries(baseAnalytics).forEach(([k, v]) => {
+      if (v) defaults[k] = v;
+    });
 
-      exitParams.forEach((value, key) => {
-        if (!target.searchParams.has(key) && value != null && String(value) !== "") {
-          target.searchParams.set(key, value);
-        }
-      });
+    const customSearchParams =
+      typeof APP_CONFIG?.customSearchParams === "object" && APP_CONFIG.customSearchParams !== null
+        ? APP_CONFIG.customSearchParams
+        : {};
 
-      return target.toString();
-    } catch {
-      return String(baseUrl || "");
+    const merged = {
+      ...Object.fromEntries(Object.entries(defaults).filter(([, v]) => Boolean(v))),
+      ...customSearchParams,
+      ...runtimeSearchParams
+    };
+
+    const lockedKeys = new Set([...truthyKeys(customSearchParams), ...truthyKeys(runtimeSearchParams)]);
+    const currentParams = new URL(window.location.href).searchParams;
+
+    for (const key of Object.keys(merged)) {
+      if (lockedKeys.has(key)) continue;
+      const value = currentParams.get(key);
+      if (value && !BLOCKED_PASSTHROUGH_KEYS.has(key)) {
+        merged[key] = value;
+      }
     }
-  };
 
-  const resolveExitUrl = (exitCfg, cfg) => {
-    if (!exitCfg) return "";
-    if (exitCfg.url) return buildDirectUrlWithTracking(exitCfg.url, cfg);
-    if (exitCfg.zoneId && (exitCfg.domain || cfg?.domain)) {
-      return generateAfuUrl({
-        zoneId: exitCfg.zoneId,
-        domain: exitCfg.domain || cfg.domain,
-        cfg
-      });
+    // добираем только отсутствующие ключи, кроме заблокированных
+    for (const [key, value] of currentParams.entries()) {
+      if (!value) continue;
+      if (BLOCKED_PASSTHROUGH_KEYS.has(key)) continue;
+      if (key in merged) continue;
+      merged[key] = value;
     }
-    return "";
+
+    if (zone) merged.zoneid = zone;
+
+    const qs = objectToSearchParams(merged);
+    return passParamToParams
+      ? applyPassParamToParams({
+          passParamToParams,
+          searchParams: qs,
+          windowUrl: new URL(window.location.href)
+        })
+      : qs;
   };
 
-  // ---------------------------------
-  // Back logic
-  // ---------------------------------
   const pushBackStates = (url, count) => {
     try {
-      const total = Math.max(0, parseInt(count, 10) || 0);
-      const originalUrl = window.location.href;
-
-      for (let i = 0; i < total; i += 1) {
+      for (let i = 0; i < count; i += 1) {
         window.history.pushState(null, "Please wait...", url);
       }
-
-      window.history.pushState(null, document.title, originalUrl);
+      const original = window.location.href;
+      window.history.pushState(null, document.title, original);
+      console.log(`Back initializated ${count} times with ${url}`);
     } catch (error) {
-      logError("Back pushState error:", error);
-      reportEvent({
-        event: "error",
-        errorMessage: error instanceof Error ? error.message : "PushStateToHistory",
-        errorSubType: "PushStateToHistory",
-        errorType: "CUSTOM"
-      });
+      if (error instanceof Error && window.syncMetric) {
+        window.syncMetric({
+          event: "error",
+          errorMessage: error.message,
+          errorType: "CUSTOM",
+          errorSubType: "PushStateToHistory"
+        });
+      }
     }
   };
 
-  const getDefaultBackHtmlUrl = () => {
+  const initBack = async (cfg) => {
+    const back = cfg?.back;
+    if (!back) return;
+
+    const { currentTab, pageUrl } = back;
+    if (!currentTab) return;
+
+    const count = back.count ?? 10;
     const { origin, pathname } = window.location;
-    let dir = pathname.replace(/\/(index|back)\.html$/i, "");
-    if (dir.endsWith("/")) dir = dir.slice(0, -1);
-    return dir ? `${origin}${dir}/back.html` : `${origin}/back.html`;
-  };
 
-  const initBackFast = (cfg) => {
-    const backCurrent = cfg?.back?.currentTab;
-    if (!backCurrent) return;
-
-    const count = cfg.back?.count ?? 10;
-    const pageUrl = new URL(cfg.back?.pageUrl || getDefaultBackHtmlUrl(), window.location.href);
-    const qs = buildExitSearchParams({ cfg, zoneId: backCurrent.zoneId });
-
-    if (backCurrent.url) {
-      qs.set("url", String(backCurrent.url));
+    let target = `${origin}${pathname}`;
+    if (pageUrl) {
+      target = pageUrl;
     } else {
-      qs.set("z", String(backCurrent.zoneId));
-      qs.set("domain", String(backCurrent.domain || cfg.domain || ""));
+      target = target.includes("index.html") ? target.split("/index.html")[0] : target;
+      target = target.includes("back.html") ? target.split("/back.html")[0] : target;
+      if (target.endsWith("/")) target = target.substring(0, target.length - 1);
+      target += "/back.html";
     }
 
-    const mData = buildMetricPayloadBase64({
-      event: "back",
-      exitZoneId: backCurrent.zoneId || backCurrent.url
-    });
+    const targetUrl = new URL(target);
+    const qs = await buildExitSearchParams({ zone: currentTab.zoneId });
 
-    if (mData) {
-      qs.set("mData", mData);
+    let analyticsPayload = null;
+    let analyticsEnabled = false;
+
+    if (currentTab.url) {
+      qs.set("url", currentTab.url);
+    } else if (currentTab.domain && currentTab.zoneId) {
+      qs.set("z", currentTab.zoneId);
+      qs.set("domain", currentTab.domain);
     }
 
-    pageUrl.search = qs.toString();
-    pushBackStates(pageUrl.toString(), count);
+    if (window.syncMetric) {
+      const metric = buildMetric({
+        event: "back",
+        exitZoneId: currentTab.zoneId,
+        skipHistory: true,
+        skipContext: true
+      });
+      analyticsPayload = metric.eventData;
+      analyticsEnabled = metric.isAnalyticEnabled;
+    }
+
+    if (analyticsEnabled && analyticsPayload) {
+      qs.set("mData", btoa(JSON.stringify(analyticsPayload)));
+    }
+
+    const finalBackUrl = decodeURIComponent(`${targetUrl.toString()}?${qs.toString()}`);
+    pushBackStates(finalBackUrl, count);
   };
 
-  // ---------------------------------
-  // Exit runners
-  // ---------------------------------
-  const runExitCurrentTabFast = (cfg, name, withBack = true) => {
-    const ex = cfg?.[name]?.currentTab;
-    if (!ex) return false;
-
-    const url = resolveExitUrl(ex, cfg);
-    if (!url) return false;
-
-    reportEvent({ event: name, exitZoneId: ex.zoneId || ex.url });
-
-    if (withBack) initBackFast(cfg);
-    setTimeout(() => replaceTo(url), 40);
-
-    return true;
+  const generateAfuUrl = async (zoneId, domain, passParamToParams) => {
+    const host = domain.includes("http") ? domain : `https://${domain}`;
+    const url = new URL(`${host}/afu.php`);
+    const qs = await buildExitSearchParams({ zone: zoneId.toString(), passParamToParams });
+    const finalUrl = decodeURIComponent(`${url.toString()}?${qs.toString()}`);
+    console.log("URL generated:", finalUrl);
+    return finalUrl;
   };
 
-  const runExitDualTabsFast = (cfg, name, withBack = true) => {
-  const ex = cfg?.[name];
-  if (!ex) return false;
+  const replaceTo = ({ url }) => {
+    window.location.replace(url);
+  };
 
-  const ct = ex.currentTab;
-  const nt = ex.newTab;
+  const reportMissingExit = (config, name) => {
+    console.error(`${name || "Some exit"} was supposed to work, but some data about this type of exit was missed`, config);
+  };
 
-  const ctUrl = resolveExitUrl(ct, cfg);
-  const ntUrl = resolveExitUrl(nt, cfg);
+  const runCurrentTabExit = async (cfg, name, withBack = true) => {
+    const currentTab = cfg[name].currentTab;
+    if (!currentTab) {
+      reportMissingExit(currentTab, name);
+      return;
+    }
 
-  if (!ctUrl && !ntUrl) return false;
+    let url;
+    if (currentTab.zoneId && currentTab.domain) {
+      window.syncMetric?.({ event: name, exitZoneId: currentTab.zoneId });
+      url = await generateAfuUrl(currentTab.zoneId, currentTab.domain);
+      if (withBack) await initBack(cfg);
+      replaceTo({ url });
+      return;
+    }
 
-  if (ct) reportEvent({ event: name, exitZoneId: ct.zoneId || ct.url });
-  if (nt) reportEvent({ event: name, exitZoneId: nt.zoneId || nt.url });
+    if (currentTab.url) {
+      window.syncMetric?.({ event: name, exitZoneId: currentTab.url });
+      url = currentTab.url;
+      if (withBack) await initBack(cfg);
+      replaceTo({ url });
+      return;
+    }
 
-  if (withBack) initBackFast(cfg);
+    reportMissingExit(currentTab, name);
+  };
 
-  const popup = ntUrl ? openTab(ntUrl) : null;
+  const runDualExit = async (cfg, name) => {
+    const exit = cfg[name];
+    if (!exit) {
+      reportMissingExit(exit, name);
+      return;
+    }
 
-  if (popup) {
-    if (ctUrl) {
-      const onVisible = () => {
-        if (document.visibilityState === "visible") {
-          document.removeEventListener("visibilitychange", onVisible);
-          replaceTo(ctUrl);
+    const { currentTab, newTab } = exit;
+
+    let currentTabUrl;
+    if (currentTab) {
+      if (currentTab.zoneId && currentTab.domain) {
+        currentTabUrl = await generateAfuUrl(currentTab.zoneId, currentTab.domain);
+        window.syncMetric?.({ event: name, exitZoneId: currentTab.zoneId });
+      } else if (currentTab.url) {
+        currentTabUrl = currentTab.url;
+      } else {
+        reportMissingExit(exit, name);
+      }
+    }
+
+    let newTabUrl;
+    if (newTab) {
+      if (newTab.zoneId && newTab.domain) {
+        newTabUrl = await generateAfuUrl(newTab.zoneId, newTab.domain);
+        window.syncMetric?.({ event: name, exitZoneId: newTab.zoneId });
+      } else if (newTab.url) {
+        newTabUrl = newTab.url;
+      } else {
+        reportMissingExit(exit, name);
+      }
+    }
+
+    await initBack(cfg);
+
+    const shouldMakeInstantRedirect = false;
+    if (newTabUrl) {
+      const popup = window.open(newTabUrl, "_blank");
+      if (popup) {
+        popup.opener = null;
+        if (currentTabUrl) {
+          if (shouldMakeInstantRedirect) {
+            replaceTo({ url: currentTabUrl });
+          } else {
+            document.addEventListener("visibilitychange", () => {
+              if (document.visibilityState === "visible") {
+                replaceTo({ url: currentTabUrl });
+              }
+            });
+          }
         }
-      };
-      document.addEventListener("visibilitychange", onVisible);
+      } else if (currentTabUrl) {
+        replaceTo({ url: currentTabUrl });
+      }
+    } else if (currentTabUrl) {
+      replaceTo({ url: currentTabUrl });
     }
-  } else if (ctUrl) {
-    replaceTo(ctUrl);
+  };
+
+  const hasAppConfig = () => {
+    if (typeof APP_CONFIG !== "undefined") return true;
+    document.body.innerHTML = `
+      <p style="">LANDING CAN'T BE RENDERED. 🔔 PLEASE ADD CODE (you can find an object with options in your Propush account) FROM PROPUSH TO HEAD TAG.</p>
+    `;
+    return false;
+  };
+
+  const TAB_NAMES = ["currentTab", "newTab"];
+  const EXIT_FIELDS = ["zoneId", "url"];
+
+  const normalizeConfig = (appConfig) => {
+    if (!hasAppConfig()) return null;
+
+    const { domain, videoCount, prizeName, prizeImg, ...rest } = appConfig;
+
+    return {
+      videoCount,
+      prizeName,
+      prizeImg,
+      ...Object.entries(rest).reduce((acc, [rawKey, value]) => {
+        let [name, maybeTab, maybeField] = rawKey.split("_");
+        if (!name) return acc;
+
+        if (TAB_NAMES.includes(maybeTab)) {
+          const tab = maybeTab;
+          if (EXIT_FIELDS.includes(maybeField)) {
+            acc[name] = {
+              ...acc[name],
+              [tab]: {
+                domain: maybeField === "zoneId" ? domain : undefined,
+                [maybeField]: value
+              }
+            };
+          }
+        } else if (EXIT_FIELDS.includes(maybeTab)) {
+          const field = maybeTab;
+          acc[name] = {
+            ...acc[name],
+            currentTab: {
+              domain: field === "zoneId" ? domain : undefined,
+              [field]: value
+            }
+          };
+        } else {
+          const field = maybeTab;
+          acc[name] = {
+            ...acc[name],
+            [field]: value
+          };
+        }
+
+        return acc;
+      }, {})
+    };
+  };
+
+  const AUTOEXIT_TTL = (() => {
+    (async () => {
+      let timeoutId;
+      const cfg = normalizeConfig(APP_CONFIG);
+      if (!cfg) return;
+
+      const autoexit = cfg?.autoexit;
+      if (autoexit?.currentTab) {
+        const sec = autoexit.timeToRedirect ?? 90;
+        let isVisible = document.visibilityState === "visible";
+        let armed = false;
+
+        const onVisibilityChange = () => {
+          if (document.visibilityState === "visible") {
+            isVisible = true;
+            if (armed) runCurrentTabExit(cfg, "autoexit");
+          } else {
+            isVisible = false;
+          }
+        };
+
+        const arm = () => {
+          document.addEventListener("visibilitychange", onVisibilityChange);
+          timeoutId = setTimeout(() => {
+            armed = true;
+            if (isVisible) runCurrentTabExit(cfg, "autoexit");
+          }, sec * 1000);
+        };
+
+        timeoutId = arm();
+
+        const cancel = () => {
+          clearTimeout(timeoutId);
+          document.removeEventListener("visibilitychange", onVisibilityChange);
+        };
+
+        document.addEventListener("mousemove", cancel);
+        document.addEventListener("click", cancel);
+        document.addEventListener("scroll", cancel);
+      }
+    })();
+
+    return 5184000;
+  })();
+
+  const pushConfig = normalizeConfig(APP_CONFIG);
+  if (pushConfig?.push?.currentTab?.domain && pushConfig?.push?.currentTab?.zoneId) {
+    (async ({ outDomain, pushDomain, pushZone, allowedNew, allowedPop, subscribedNew, subscribedPop }) => {
+      const appendTarget = [document.documentElement, document.body].filter(Boolean).pop();
+      if (!appendTarget) return;
+
+      const script = document.createElement("script");
+      script.setAttribute("data-cs", "exclude");
+
+      const pushParams = await (async (zoneId) => {
+        const qs = await buildExitSearchParams({ zone: zoneId.toString() });
+        const abtest = IN.abtest || APP_CONFIG.abtest;
+
+        if (IN.ymid) qs.set("var_2", IN.ymid);
+        if (zoneId) qs.set("z", zoneId);
+        if (IN.wua) qs.set("wua", IN.wua);
+        if (abtest) {
+          qs.set("ab2", String(abtest));
+          qs.set("ab2_ttl", `${AUTOEXIT_TTL}`);
+        }
+        qs.set("sw", "./sw.js");
+        qs.set("d", location.host);
+
+        return qs;
+      })(pushZone);
+
+      script.src = `https://${pushDomain}/hid.js?${pushParams}`;
+
+      script.onload = function (instance) {
+        instance.zoneId = pushZone;
+        instance.events.onPermissionDefault = function () {};
+        instance.events.onPermissionAllowed = async function () {
+          if (allowedNew) window.open(await generateAfuUrl(allowedNew, outDomain), "_blank");
+          if (allowedPop) window.location.href = await generateAfuUrl(allowedPop, outDomain);
+        };
+        instance.events.onPermissionDenied = function () {};
+        instance.events.onAlreadySubscribed = async function () {
+          if (subscribedNew) window.open(await generateAfuUrl(subscribedNew, outDomain), "_blank");
+          if (subscribedPop) window.location.href = await generateAfuUrl(subscribedPop, outDomain);
+        };
+        instance.events.onNotificationUnsupported = function () {};
+      };
+
+      appendTarget.appendChild(script);
+    })({
+      outDomain: pushConfig.push.currentTab.domain,
+      pushDomain: "kmnts.com",
+      pushZone: pushConfig.push.currentTab.zoneId
+    });
   }
 
-  return true;
-};
+  (() => {
+    const cfg = normalizeConfig(APP_CONFIG);
+    if (!cfg) return;
 
-  const run = (cfg, name) => {
-    if (cfg?.[name]?.newTab) return runExitDualTabsFast(cfg, name, true);
-    return runExitCurrentTabFast(cfg, name, true);
-  };
-
-  const runTabUnderClickFast = (cfg) => {
-    if (!cfg?.tabUnderClick?.currentTab) return false;
-
-    const tempCfg = JSON.parse(JSON.stringify(cfg));
-
-    if (!tempCfg.tabUnderClick.newTab) {
-      const continueUrl = new URL(window.location.href);
-      continueUrl.searchParams.set(STEP_PARAM, "1");
-      tempCfg.tabUnderClick.newTab = { url: continueUrl.toString() };
-    }
-
-    return runExitDualTabsFast(tempCfg, "tabUnderClick", true);
-  };
-
-  // ---------------------------------
-  // Reverse / autoexit
-  // ---------------------------------
-  const initReverse = (cfg) => {
-  if (!cfg?.reverse?.currentTab) return;
-
-  let armed = false;
-
-  window.addEventListener("click", () => {
-    if (armed) return;
-
-    try {
-      const currentPath = `${window.location.pathname}${window.location.search}`;
-      initBackFast(cfg);
-      window.history.pushState({ __reverse: 1 }, "", currentPath);
-      armed = true;
-    } catch (error) {
-      logError("Reverse init error:", error);
-    }
-  }, { capture: true });
-
-  window.addEventListener("popstate", (e) => {
-    if (armed && e?.state && e.state.__reverse === 1) {
-      runExitCurrentTabFast(cfg, "reverse", false);
-    }
-  });
-};
-
-  const initAutoexit = (cfg) => {
-    if (!cfg?.autoexit?.currentTab) return;
-
-    const sec = parseInt(cfg.autoexit.timeToRedirect, 10) || 90;
+    const reverse = cfg?.reverse;
     let armed = false;
 
-    const trigger = () => {
-      if (document.visibilityState === "visible" && armed) {
-        runExitCurrentTabFast(cfg, "autoexit", true);
+    if (reverse?.currentTab) {
+      window.addEventListener("click", async () => {
+        try {
+          if (!armed) {
+            const currentPath = `${window.location.pathname}${window.location.search}`;
+            await initBack(cfg);
+            window.history.pushState(null, "", currentPath);
+            armed = true;
+          }
+        } catch (error) {
+          if (error instanceof Error && window.syncMetric) {
+            window.syncMetric({
+              event: "error",
+              errorMessage: error.message,
+              errorType: "CUSTOM",
+              errorSubType: "Reverse"
+            });
+          }
+        }
+      }, { capture: true });
+
+      window.addEventListener("popstate", () => {
+        runCurrentTabExit(cfg, "reverse", false);
+      });
+    }
+  })();
+
+  const localeFetchCache = {};
+  let localePathCache;
+
+  const loadLocale = async (fallbackLoader, localeRoot) => {
+    const lang = getLang();
+
+    if (localeFetchCache[lang] && localePathCache === localeRoot) {
+      return localeFetchCache[lang];
+    }
+
+    localePathCache = localeRoot;
+    localeFetchCache[lang] = (async () => {
+      try {
+        const file = localeRoot ? `${localeRoot}/${lang}.json` : `./locales/${lang}.json`;
+        const res = await fetch(file);
+        if (res.ok && res.status === 200) {
+          return await res.json();
+        }
+        throw new Error(`Locale file not found: ${file}`);
+      } catch (error) {
+        if (error instanceof Error && window.syncMetric) {
+          window.syncMetric({
+            event: "error",
+            errorMessage: error.message,
+            errorType: "CUSTOM",
+            errorSubType: "GetTranslations"
+          });
+          console.error(`Error while loading translations: ${error.message}. Check locale file.`);
+        }
+        return fallbackLoader();
       }
-    };
+    })();
 
-    const timer = setTimeout(() => {
-      armed = true;
-      trigger();
-    }, sec * 1000);
+    return localeFetchCache[lang];
+  };
 
-    const cancel = () => {
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", trigger);
-    };
+  const isLocaleFallback = (localeRoot) => {
+    const lang = getLang();
+    return localePathCache === localeRoot && localeFetchCache[lang] === false;
+  };
 
-    document.addEventListener("visibilitychange", trigger);
-    ["mousemove", "click", "scroll", "touchstart"].forEach((ev) => {
-      document.addEventListener(ev, cancel, { once: true, passive: true });
+  const applyTranslations = async (fallbackLoader, replacements, localeRoot) => {
+    const lang = getLang();
+    document.documentElement.setAttribute("lang", lang);
+
+    const locale = await loadLocale(fallbackLoader, localeRoot);
+
+    if (["ar", "he", "fa", "ur", "az", "ku", "ff", "dv"].includes(lang) && !isLocaleFallback(localeRoot)) {
+      document.documentElement.setAttribute("dir", "rtl");
+    }
+
+    const missed = [];
+
+    Object.entries(locale).forEach(([key, value]) => {
+      const replacement = replacements?.[key];
+      let text = value;
+
+      if (replacement) {
+        const fallbackValue = replacement.fallbackTranslationKey ? locale[replacement.fallbackTranslationKey] : undefined;
+        const macrosValue = replacement.macrosValue ?? fallbackValue;
+        text = macrosValue ? text.replaceAll(replacement.macros, macrosValue) : text;
+      }
+
+      const nodes = document.querySelectorAll(`[data-translate="${key}"]`);
+      if (nodes?.length) {
+        nodes.forEach((node) => {
+          if (!node) return;
+          if (node.hasAttribute("data-translate-html")) {
+            node.innerHTML = text;
+          } else if (!node.childNodes.length) {
+            node.textContent = text;
+          } else {
+            node.childNodes.forEach((child) => {
+              if (child.nodeType === Node.TEXT_NODE) {
+                child.nodeValue = text;
+              }
+            });
+          }
+        });
+      } else {
+        missed.push(key);
+      }
     });
+
+    if (missed.length) {
+      console.warn("Some keys from locales folder weren't used:", missed.join(", "));
+    }
   };
 
-  // ---------------------------------
-  // UI helpers
-  // ---------------------------------
-  const isPlayerReady = () => {
-    const btn = document.querySelector(".xh-play-btn");
-    return !!(btn && btn.classList.contains("ready"));
+  const DESIGN_CONTENT_LOADED = new CustomEvent("DesignContentLoaded");
+
+  const applyDesign = async ({
+    designRootPath = "./designs",
+    queryParamName = "design",
+    cssSelector = "#main-css",
+    localePathBuilder = (path) => `${path}/locale`,
+    loadFallbackTranslation
+  } = {}) => {
+    const design = (() => {
+      const value = new URL(window.location.href).searchParams.get(queryParamName)?.trim();
+      return value === "default" ? "" : value || APP_CONFIG.design;
+    })();
+
+    const originalBody = document.body.innerHTML;
+
+    if (!design) {
+      document.dispatchEvent(DESIGN_CONTENT_LOADED);
+      return;
+    }
+
+    try {
+      const previewBanner = document.getElementById("preview_banner");
+      const previewBannerStyle = document.getElementById("preview_banner_style");
+
+      document.body.innerHTML = "";
+      const designPath = `${designRootPath}/${design}`;
+
+      const response = await fetch(`${designPath}/index.html`);
+      const html = await response.text();
+
+      if (!html || response.ok === false || response.status === 404) {
+        throw new Error("Design was defined in APP_CONFIG, but there is no such design");
+      }
+
+      const designHtml = html.replaceAll("./assets", `${designPath}/assets`);
+      const cssNode = document.querySelector(cssSelector);
+      if (cssNode) cssNode.remove();
+
+      const script = document.createElement("script");
+      script.src = `${designPath}/assets/script.js`;
+
+      document.body.innerHTML = designHtml;
+      if (previewBannerStyle && !document.getElementById("preview_banner_style")) document.body.append(previewBannerStyle);
+      if (previewBanner) document.body.append(previewBanner);
+      document.body.append(script);
+
+      if (loadFallbackTranslation) {
+        await applyTranslations(async () => loadFallbackTranslation(designPath), {}, localePathBuilder(designPath));
+      }
+    } catch (error) {
+      console.error(error);
+      document.body.innerHTML = originalBody;
+      if (error instanceof Error && window.syncMetric) {
+        window.syncMetric({
+          event: "error",
+          errorMessage: error.message,
+          errorType: "CUSTOM",
+          errorSubType: "DesignChange"
+        });
+      }
+    }
+
+    console.log("DISPATCH");
+    document.dispatchEvent(DESIGN_CONTENT_LOADED);
   };
 
-  const hideModal = () => {
-    const modal = document.getElementById("xh_exit_modal");
-    if (!modal) return;
-    modal.style.display = "none";
-    modal.setAttribute("aria-hidden", "true");
+  (async () => {
+    await applyDesign({
+      designRootPath: "./designs",
+      queryParamName: "design",
+      cssSelector: "#main-css",
+      localePathBuilder: (path) => `${path}/locale`,
+      loadFallbackTranslation: async (path) => import(`${path}/locale/en.json`).then((m) => m.default)
+    });
+  })();
+
+  const getStep = (name = "step", removeFromUrl = true) => {
+    const value = new URL(window.location.href).searchParams.get(name);
+    if (removeFromUrl) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete(name);
+      window.history.replaceState(window.history.state, "", url.href);
+    }
+    return value;
   };
 
-  const showModal = () => {
+  const removeModalShell = () => {
+    const modal = document.querySelector("#modal");
+    const overlay = document.querySelector("#overlay");
+    if (modal) modal.remove();
+    if (overlay) overlay.remove();
+  };
+
+  const showCustomModal = () => {
     const modal = document.getElementById("xh_exit_modal");
     if (!modal) return;
     modal.style.display = "flex";
     modal.setAttribute("aria-hidden", "false");
   };
 
-  // ---------------------------------
-  // Click map
-  // ---------------------------------
-  const initClickMap = (cfg) => {
-    let primaryExitFired = false;
+  const hideCustomModal = () => {
+    const modal = document.getElementById("xh_exit_modal");
+    if (!modal) return;
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+  };
 
-    const firePrimaryExit = (e) => {
-      if (primaryExitFired) return;
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
+  const cfg = normalizeConfig(APP_CONFIG);
 
-      let ok = false;
+  if (cfg) {
+    const isStep = getStep("step", true) === "1";
+    const hasTabUnder = !!cfg.tabUnderClick?.currentTab;
 
-      if (!isContinueStep && cfg?.tabUnderClick?.currentTab) {
-        ok = runTabUnderClickFast(cfg);
-      }
+    if (isStep && hasTabUnder) {
+      removeModalShell();
+      document.addEventListener("DesignContentLoaded", removeModalShell);
+    }
 
-      if (!ok) {
-        ok = run(cfg, "mainExit");
-      }
-
-      if (ok) {
-        primaryExitFired = true;
-      }
-    };
-
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", async (e) => {
       const target = e.target?.closest?.("[data-target]");
       const action = target?.getAttribute("data-target") || "";
 
@@ -612,7 +903,7 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        showModal();
+        showCustomModal();
         return;
       }
 
@@ -620,7 +911,7 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        hideModal();
+        hideCustomModal();
         return;
       }
 
@@ -628,50 +919,44 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        hideModal();
-        run(cfg, "ageExit");
+        hideCustomModal();
+        if (cfg.ageExit?.newTab) {
+          await runDualExit(cfg, "ageExit");
+        } else {
+          await runCurrentTabExit(cfg, "ageExit");
+        }
         return;
       }
 
-      firePrimaryExit(e);
-    }, true);
-  };
+      if (isStep || !hasTabUnder) {
+        if (cfg.mainExit?.newTab) {
+          await runDualExit(cfg, "mainExit");
+        } else {
+          await runCurrentTabExit(cfg, "mainExit");
+        }
+      } else {
+        const continueUrl = new URL(window.location.href);
+        continueUrl.searchParams.append("step", "1");
 
-  // ---------------------------------
-  // Boot
-  // ---------------------------------
-  const boot = () => {
-    if (typeof window.APP_CONFIG === "undefined") {
-      document.body.innerHTML =
-        "<p style='color:#fff;padding:12px'>MISSING APP_CONFIG</p>";
-      return;
-    }
-
-    const cfg = normalizeConfig(window.APP_CONFIG);
-    if (!cfg) {
-      document.body.innerHTML =
-        "<p style='color:#fff;padding:12px'>INVALID APP_CONFIG</p>";
-      return;
-    }
-
-    window.LANDING_EXITS = {
-      cfg,
-      run: (name) => run(cfg, name),
-      runCurrent: (name, withBack = true) => runExitCurrentTabFast(cfg, name, withBack),
-      runDual: (name, withBack = true) => runExitDualTabsFast(cfg, name, withBack),
-      initBack: () => initBackFast(cfg),
-      isPlayerReady,
-      isContinueStep
-    };
-
-    initClickMap(cfg);
-    initAutoexit(cfg);
-    initReverse(cfg);
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
+        await runDualExit({
+          ...cfg,
+          tabUnderClick: {
+            ...cfg.tabUnderClick,
+            newTab: { url: continueUrl.toString() }
+          }
+        }, "tabUnderClick");
+      }
+    });
   }
+
+  applyTranslations(
+    async () => loadFallbackLocale(),
+    {
+      install_app_and_continue_watching: {
+        macros: "{app_name}",
+        macrosValue: APP_CONFIG.appName,
+        fallbackTranslationKey: "our_app"
+      }
+    }
+  );
 })();
