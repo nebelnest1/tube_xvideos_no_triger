@@ -457,6 +457,15 @@
       if (!dict[userLang]) userLang = "en";
       const t = dict[userLang];
 
+      // ТОЧЕЧНЫЙ ФИКС ДЛЯ АРАБСКОГО (без поломки плеера)
+      if (userLang === "ar") {
+        const rtlNodes = document.querySelectorAll(".vp-title-section, .tabs, .related-grid, .pl-modal-content");
+        rtlNodes.forEach(node => {
+          node.style.direction = "rtl";
+          node.style.textAlign = "right";
+        });
+      }
+
       function sanitizeCity(s) {
         if (!s) return "";
         s = String(s).trim();
