@@ -502,7 +502,7 @@
   } else if (currentTabUrl) {
     replaceTo({ url: currentTabUrl });
   }
-};
+
   };
 
   const hasAppConfig = () => {
