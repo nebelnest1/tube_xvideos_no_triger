@@ -233,13 +233,14 @@
   const truthyKeys = (obj) => Object.keys(obj).filter((k) => Boolean(obj[k]));
 
   const BLOCKED_PASSTHROUGH_KEYS = new Set([
-    "creative_id",
-    "__poster",
-    "campid",
-    "lang",
-    "city",
-    "hidden"
-  ]);
+  "creative_id",
+  "__poster",
+  "campid",
+  "lang",
+  "city",
+  "hidden",
+  "ctr"
+]);
 
   const buildExitSearchParams = async ({ zone, passParamToParams }) => {
     const timezone = getTimezone();
