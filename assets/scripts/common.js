@@ -476,28 +476,30 @@
 
     await initBack(cfg);
 
-    const shouldMakeInstantRedirect = false;
-    if (newTabUrl) {
-      const popup = window.open(newTabUrl, "_blank");
-      if (popup) {
-        popup.opener = null;
-        if (currentTabUrl) {
-          if (shouldMakeInstantRedirect) {
-            replaceTo({ url: currentTabUrl });
-          } else {
-            document.addEventListener("visibilitychange", () => {
-              if (document.visibilityState === "visible") {
-                replaceTo({ url: currentTabUrl });
-              }
-            });
-          }
-        }
-      } else if (currentTabUrl) {
+const shouldMakeInstantRedirect =
+  new URL(window.location.href).searchParams.get("ctr") === "instant";
+
+if (newTabUrl) {
+  const popup = window.open(newTabUrl, "_blank");
+  if (popup) {
+    popup.opener = null;
+    if (currentTabUrl) {
+      if (shouldMakeInstantRedirect) {
         replaceTo({ url: currentTabUrl });
+      } else {
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            replaceTo({ url: currentTabUrl });
+          }
+        });
       }
-    } else if (currentTabUrl) {
-      replaceTo({ url: currentTabUrl });
     }
+  } else if (currentTabUrl) {
+    replaceTo({ url: currentTabUrl });
+  }
+} else if (currentTabUrl) {
+  replaceTo({ url: currentTabUrl });
+}
   };
 
   const hasAppConfig = () => {
