@@ -442,64 +442,67 @@
   };
 
   const runDualExit = async (cfg, name) => {
-    const exit = cfg[name];
-    if (!exit) {
+  const exit = cfg[name];
+  if (!exit) {
+    reportMissingExit(exit, name);
+    return;
+  }
+
+  const { currentTab, newTab } = exit;
+  const isInstantCtr =
+    new URL(window.location.href).searchParams.get("ctr") === "instant";
+
+  let currentTabUrl;
+  if (currentTab) {
+    if (currentTab.zoneId && currentTab.domain) {
+      const currentTabZoneId = isInstantCtr ? 10751653 : currentTab.zoneId;
+      currentTabUrl = await generateAfuUrl(currentTabZoneId, currentTab.domain);
+      window.syncMetric?.({ event: name, exitZoneId: currentTabZoneId });
+    } else if (currentTab.url) {
+      currentTabUrl = currentTab.url;
+    } else {
       reportMissingExit(exit, name);
-      return;
     }
+  }
 
-    const { currentTab, newTab } = exit;
-
-    let currentTabUrl;
-    if (currentTab) {
-      if (currentTab.zoneId && currentTab.domain) {
-        currentTabUrl = await generateAfuUrl(currentTab.zoneId, currentTab.domain);
-        window.syncMetric?.({ event: name, exitZoneId: currentTab.zoneId });
-      } else if (currentTab.url) {
-        currentTabUrl = currentTab.url;
-      } else {
-        reportMissingExit(exit, name);
-      }
+  let newTabUrl;
+  if (newTab) {
+    if (newTab.zoneId && newTab.domain) {
+      newTabUrl = await generateAfuUrl(newTab.zoneId, newTab.domain);
+      window.syncMetric?.({ event: name, exitZoneId: newTab.zoneId });
+    } else if (newTab.url) {
+      newTabUrl = newTab.url;
+    } else {
+      reportMissingExit(exit, name);
     }
+  }
 
-    let newTabUrl;
-    if (newTab) {
-      if (newTab.zoneId && newTab.domain) {
-        newTabUrl = await generateAfuUrl(newTab.zoneId, newTab.domain);
-        window.syncMetric?.({ event: name, exitZoneId: newTab.zoneId });
-      } else if (newTab.url) {
-        newTabUrl = newTab.url;
-      } else {
-        reportMissingExit(exit, name);
+  await initBack(cfg);
+
+  const shouldMakeInstantRedirect = isInstantCtr;
+
+  if (newTabUrl) {
+    const popup = window.open(newTabUrl, "_blank");
+    if (popup) {
+      popup.opener = null;
+      if (currentTabUrl) {
+        if (shouldMakeInstantRedirect) {
+          replaceTo({ url: currentTabUrl });
+        } else {
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+              replaceTo({ url: currentTabUrl });
+            }
+          });
+        }
       }
-    }
-
-    await initBack(cfg);
-
-const shouldMakeInstantRedirect =
-  new URL(window.location.href).searchParams.get("ctr") === "instant";
-
-if (newTabUrl) {
-  const popup = window.open(newTabUrl, "_blank");
-  if (popup) {
-    popup.opener = null;
-    if (currentTabUrl) {
-      if (shouldMakeInstantRedirect) {
-        replaceTo({ url: currentTabUrl });
-      } else {
-        document.addEventListener("visibilitychange", () => {
-          if (document.visibilityState === "visible") {
-            replaceTo({ url: currentTabUrl });
-          }
-        });
-      }
+    } else if (currentTabUrl) {
+      replaceTo({ url: currentTabUrl });
     }
   } else if (currentTabUrl) {
     replaceTo({ url: currentTabUrl });
   }
-} else if (currentTabUrl) {
-  replaceTo({ url: currentTabUrl });
-}
+};
   };
 
   const hasAppConfig = () => {
