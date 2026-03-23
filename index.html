@@ -602,25 +602,28 @@
       const playBtn = document.querySelector(".pl-play-btn");
 
       if (playBtn) {
-        const cid = urlParams.get("var_2");
-        const cr = urlParams.get("creative_id");
+  const cid = urlParams.get("var_2");
+  const cr = urlParams.get("creative_id");
+  const fallback = "./assets/images/1.webp";
 
-        if (buffer) buffer.style.display = "none";
-        if (shimmer) shimmer.style.display = "none";
-        playBtn.classList.add("ready");
+  if (buffer) buffer.style.display = "none";
+  if (shimmer) shimmer.style.display = "none";
+  playBtn.classList.add("ready");
 
-        if (frame && cid && cr) {
-          frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`;
-          frame.classList.add("is-ready");
-          frame.addEventListener("error", () => frame.remove(), { once: true });
-        } else if (frame) {
-          frame.remove();
-        }
-      }     
-      const isHiddenCam = urlParams.get("hidden") === "true";
-      if (isHiddenCam && frame) {
-        frame.classList.add("hidden-cam-effect");
-      }
+  if (frame && cid && cr) {
+    frame.src = `https://cdn.x0x.online/frames/${encodeURIComponent(cid)}/${encodeURIComponent(cr)}.webp`;
+    frame.classList.add("is-ready");
+
+    frame.addEventListener("error", function onError() {
+      frame.removeEventListener("error", onError);
+      frame.src = fallback;
+      frame.classList.add("is-ready");
+    }, { once: true });
+  } else if (frame) {
+    frame.src = fallback;
+    frame.classList.add("is-ready");
+  }
+}
     });
   </script>
 
