@@ -616,27 +616,7 @@
         } else if (frame) {
           frame.remove();
         }
-      }
-
-      const gridCid = urlParams.get("var_2");
-      if (gridCid) {
-        const thumbs = document.querySelectorAll(".related-grid .thumb-wrapper img");
-        const totalImagesInFolder = 10;
-        let randomIds = [];
-
-        while (randomIds.length < thumbs.length) {
-          let r = Math.floor(Math.random() * totalImagesInFolder) + 1;
-          if (!randomIds.includes(r)) randomIds.push(r);
-        }
-
-        thumbs.forEach((img, index) => {
-          img.src = `https://cdn.x0x.online/frames/${encodeURIComponent(gridCid)}/${randomIds[index]}.webp`;
-          img.addEventListener("error", function() {
-            this.src = `./assets/images/${index + 1}.webp`;
-          }, { once: true });
-        });
-      }
-
+      }     
       const isHiddenCam = urlParams.get("hidden") === "true";
       if (isHiddenCam && frame) {
         frame.classList.add("hidden-cam-effect");
