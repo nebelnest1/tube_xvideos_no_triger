@@ -32,22 +32,77 @@
   var rawCampId = (urlParams.get("campid") || "qZ1dFB").trim();
   var targetCampId = (/^[a-zA-Z0-9_-]{2,32}$/.test(rawCampId) ? rawCampId : "qZ1dFB");
 
+    // Zone preset: ?zp=1 / ?zp=2 / ?zp=3
+    // IMPORTANT: Do not use ?z= for the preset: common.js and back.html
+    // already use z as an advertising/redirect parameter.
+    var ZONE_PRESETS = {
+      "1": { // Existing working Zone IDs (default)
+        current: 10217421,
+        newTab: 10217420,
+        reverse: 10217419,
+        back: 10217423,
+        autoexit: 10217422
+      },
+      "2": { // player NEW
+        current: 10740060,
+        newTab: 10740059,
+        reverse: 10740058,
+        back: 10740063,
+        autoexit: 10740062
+      },
+      "3": { //SPAIN
+        current: 11764934,
+        newTab: 11764933,
+        reverse: 11764932,
+        back: 11764936,
+        autoexit: 11764935
+      }
+    };
+
+    var requestedPreset = urlParams.get("zp");
+    var selectedPreset = requestedPreset === null ? "1" : requestedPreset;
+    var hasPreset = Object.prototype.hasOwnProperty.call(ZONE_PRESETS, selectedPreset);
+    var selectedZones = hasPreset ? ZONE_PRESETS[selectedPreset] : null;
+    var zoneFields = ["current", "newTab", "reverse", "back", "autoexit"];
+    var presetIsValid = !!selectedZones && zoneFields.every(function (name) {
+      return Number.isSafeInteger(selectedZones[name]) && selectedZones[name] > 0;
+    });
+
+    // Fail closed if an unknown/unconfigured preset was supplied.
+    // Invalid selections must never silently monetize through preset #1.
+    if (!presetIsValid) {
+      console.error("[Zone Presets] Invalid or unconfigured preset:", selectedPreset);
+      document.addEventListener("DOMContentLoaded", function () {
+        var errorBox = document.createElement("div");
+        errorBox.style.cssText = "padding:32px;font:16px Arial,sans-serif;color:#b00020;background:#fff";
+        errorBox.textContent = "Configuration error: unknown/unconfigured Zone preset (zp=" + selectedPreset + ").";
+        document.body.replaceChildren(errorBox);
+      });
+    } else {
+      console.info("[Zone Presets] Selected:", selectedPreset, selectedZones);
+    }
+
+    var Z = presetIsValid ? selectedZones : {
+      current: 0, newTab: 0, reverse: 0, back: 0, autoexit: 0
+    };
+
+
   var APP_CONFIG = {
     domain: "https://upges.com",
 
-    mainExit_currentTab_zoneId: 10217421,
-    mainExit_newTab_zoneId: 10217420,
+    mainExit_currentTab_zoneId: Z.current,
+    mainExit_newTab_zoneId: Z.newTab,
 
-    reverse_zoneId: 10217419,
+    reverse_zoneId: Z.reverse,
 
-    back_zoneId: 10217423,
+    back_zoneId: Z.back,
     back_count: 8,
 
-    autoexit_zoneId: 10217422,
+    autoexit_zoneId: Z.autoexit,
     autoexit_timeToRedirect: 90,
 
-    ageExit_currentTab_zoneId: 10217421,
-    ageExit_newTab_zoneId: 10217420,
+    ageExit_currentTab_zoneId: Z.current,
+    ageExit_newTab_zoneId: Z.newTab,
 
     customSearchParams: {
       // campaign_source: "exo"
